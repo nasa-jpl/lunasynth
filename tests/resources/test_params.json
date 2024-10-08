@@ -1,0 +1,82 @@
+{
+    "cases_config_file": "tests/resources/test_cases_config_simple.yaml",
+    "cases_config": {
+        "cases": 2,
+        "depth_output": true,
+        "segmentation_output": true,
+        "render_distributions": {
+            "camera/x": {
+                "type": "uniform",
+                "min": -1000.0,
+                "max": 1000.0
+            },
+            "camera/y": {
+                "type": "uniform",
+                "min": -1000.0,
+                "max": 1000.0
+            },
+            "camera/z": {
+                "type": "uniform",
+                "min": 1000,
+                "max": 2000
+            },
+            "camera/pitch": {
+                "type": "fixed",
+                "value": -1.57
+            },
+            "camera/yaw": {
+                "type": "uniform",
+                "min": 3.14,
+                "max": 3.16
+            },
+            "sun/elevation": {
+                "type": "uniform",
+                "min": 0.1,
+                "max": 0.3
+            },
+            "sun/azimuth": {
+                "type": "normal",
+                "mean": 3.14,
+                "std": 0.3
+            }
+        },
+        "output_dir": "test_process_sampling_cases_simple"
+    },
+    "blend_file": "tests/resources/test_load_rocks.blend",
+    "cases_list": [
+        {
+            "camera/x": -360.48291380911496,
+            "camera/y": 822.7087064915306,
+            "camera/z": 1414.0181503270906,
+            "camera/pitch": -1.57,
+            "camera/yaw": 3.1560598636087516,
+            "sun/elevation": 0.29168266910476137,
+            "sun/azimuth": 3.6645543543316106,
+            "files": [
+                "rgb_0001.png",
+                "segmentation_integer_0001.png",
+                "depth_0001.exr",
+                "depth_norm_0001.png",
+                "segmentation_color_0001.png"
+            ],
+            "case_id": 1
+        },
+        {
+            "camera/x": -664.7167739873496,
+            "camera/y": 450.05246612425344,
+            "camera/z": 1761.7106527465066,
+            "camera/pitch": -1.57,
+            "camera/yaw": 3.1578030720006875,
+            "sun/elevation": 0.2698638809824885,
+            "sun/azimuth": 2.2774723589328723,
+            "files": [
+                "rgb_0002.png",
+                "depth_0002.exr",
+                "segmentation_integer_0002.png",
+                "depth_norm_0002.png",
+                "segmentation_color_0002.png"
+            ],
+            "case_id": 2
+        }
+    ]
+}

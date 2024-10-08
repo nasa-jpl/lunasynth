@@ -1,0 +1,4 @@
+render_engine: CYCLES
+sampling_render: 4096
+resolution_x: 2048
+resolution_y: 2048

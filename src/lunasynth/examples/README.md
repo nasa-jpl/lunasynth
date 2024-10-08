@@ -1,0 +1,1 @@
+The files in this folder are examples of how to use the Lunasynth library.

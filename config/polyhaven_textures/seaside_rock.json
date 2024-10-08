@@ -1,0 +1,52 @@
+[
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/blend/8k/seaside_rock/seaside_rock_8k.blend",
+      "size": 216158,
+      "path": "seaside_rock_8k.blend"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/seaside_rock/seaside_rock_ao_8k.jpg",
+      "size": 37364307,
+      "path": "textures/seaside_rock_ao_8k.jpg"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/seaside_rock/seaside_rock_arm_8k.exr",
+      "size": 56504707,
+      "path": "textures/seaside_rock_arm_8k.exr"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/seaside_rock/seaside_rock_disp_8k.exr",
+      "size": 5949007,
+      "path": "textures/seaside_rock_disp_8k.exr"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/seaside_rock/seaside_rock_nor_gl_8k.exr",
+      "size": 140543637,
+      "path": "textures/seaside_rock_nor_gl_8k.exr"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/seaside_rock/seaside_rock_rough_8k.exr",
+      "size": 16422023,
+      "path": "textures/seaside_rock_rough_8k.exr"
+    },
+    {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/8k/seaside_rock/seaside_rock_disp_8k.png",
+        "size": 79344654,
+        "path": "textures/seaside_rock_disp_8k.png"
+    },
+    {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/seaside_rock/seaside_rock_nor_gl_8k.exr",
+        "size": 140543637,
+        "path": "textures/seaside_rock_nor_gl_8k.exr"
+    },
+    {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/seaside_rock/seaside_rock_rough_8k.exr",
+        "size": 16422023,
+        "path": "textures/seaside_rock_rough_8k.exr"
+    },
+    {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/seaside_rock/seaside_rock_diff_8k.jpg",
+    "size": 44503910,
+    "path": "textures/seaside_rock_diff_8k.jpg"
+    }
+]

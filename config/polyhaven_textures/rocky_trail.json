@@ -1,0 +1,27 @@
+[
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/blend/8k/rocky_trail/rocky_trail_8k.blend",
+      "size": 225243,
+      "path": "rocky_trail_8k.blend"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/rocky_trail/rocky_trail_nor_gl_8k.exr",
+      "size": 164600271,
+      "path": "textures/rocky_trail_nor_gl_8k.exr"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/rocky_trail/rocky_trail_rough_8k.exr",
+      "size": 66524470,
+      "path": "textures/rocky_trail_rough_8k.exr"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/rocky_trail/rocky_trail_diff_8k.jpg",
+      "size": 52083376,
+      "path": "textures/rocky_trail_diff_8k.jpg"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/8k/rocky_trail/rocky_trail_disp_8k.png",
+      "size": 91397498,
+      "path": "textures/rocky_trail_disp_8k.png"
+    }
+  ]

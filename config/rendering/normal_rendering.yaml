@@ -1,0 +1,5 @@
+render_engine: CYCLES
+denoise: true
+sampling_render: 2048
+resolution_x: 720
+resolution_y: 720

@@ -1,0 +1,32 @@
+cases: 10
+depth_output: true
+segmentation_output: true
+render_distributions:
+  camera/x:
+    type: "uniform"
+    min: -40.0
+    max: 40.0
+  camera/y:
+    type: "uniform"
+    min: -40.0
+    max: 40.0
+  camera/z:
+    type: "uniform"
+    min: 30.0
+    max: 40.0
+  camera/pitch:
+    type: "uniform"
+    min: -0.2
+    max: -0.4
+  camera/yaw:
+    type: "uniform"
+    min: 0.0
+    max: 6.28
+  sun/elevation:
+    type: "uniform"
+    min: 0.1
+    max: 0.4
+  sun/azimuth:
+    type: "uniform"
+    min: 0.0
+    max: 6.28

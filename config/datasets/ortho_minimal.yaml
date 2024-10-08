@@ -1,0 +1,48 @@
+rendering:
+  depth_output: true
+  segmentation_output: true
+  camera_type: "ORTHO"
+  render_engine: CYCLES
+  denoise: true
+  sampling_render: 64
+  resolution_x: 320
+  resolution_y: 320
+base_mesh:
+  meshes: ["../../assets/base_meshes/Haworth_final_adj_5mpp_surf_piece_0_5.tif"]
+  material: "moon_albedo"
+name: "minimal"
+output:
+  save_blender_file: false
+  output_root: "tmp/datasets/"
+terrain:
+  desired_spatial_resolution: 0.6
+  samples: 1
+  add_rocks: true
+  add_craters: true
+  rock_field:
+    rock_source: 'assets/rocks/generated_100verts'
+    h_min: 1.0
+    h_max: 10.0
+    density:
+      type: "uniform"
+      min: 0.01
+      max: 0.02
+  crater_field:
+    crater_type: "normal"
+    h_min: 1.0
+    h_max: 20.0
+    density:
+      type: "uniform"
+      min: 0.1
+      max: 0.2
+rendering_cases:
+  cases: 2
+  distributions:
+    sun/elevation:
+      type: "uniform"
+      min: 0.1
+      max: 0.2
+    sun/azimuth:
+      type: "uniform"
+      min: 0.0
+      max: 6.28

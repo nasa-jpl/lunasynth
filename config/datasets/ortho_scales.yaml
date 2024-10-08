@@ -1,0 +1,48 @@
+rendering:
+  depth_output: true
+  segmentation_output: true
+  camera_type: "ORTHO"
+  render_engine: CYCLES
+  denoise: true
+  sampling_render: 2048
+  resolution_x: 1000
+  resolution_y: 1000
+  device: "GPU"
+base_mesh:
+  meshes: ["../moon_data/pgda/NPB/piece_0_1.tif"]
+  material: "Regolith7_MAT"
+output:
+  save_blender_file: false
+  output_root: "tmp/datasets/"
+terrain:
+  desired_spatial_resolution: 0.4
+  samples: 1
+  rock_field:
+    rock_source: 'assets/rocks/generated_100verts'
+    h_min: 1.0
+    h_max: 10.0
+    material: "Regolith7_MAT"
+    density: 0.06
+  crater_field:
+    crater_type: "normal"
+    h_min: 1.0
+    h_max: 30.0
+    density: 1.0
+rendering_cases:
+  cases: 3
+  distributions:
+    sun/elevation:
+      type: "fixed"
+      value: 0.1
+    sun/azimuth:
+      type: "fixed"
+      value: 0.0
+    camera/x:
+      type: "fixed"
+      value: 0
+    camera/y:
+      type: "fixed"
+      value: 0
+    camera/ortho_scale:
+      type: "grid_list"
+      values: [10, 100, 1000]

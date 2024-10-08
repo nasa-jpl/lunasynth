@@ -1,0 +1,1 @@
+Files in this folder are meant for quick testing and prototyping of new features. They are meant to be used as standalone scripts not relying on any other files in the repository. They are not maintained and may be deleted at any time.

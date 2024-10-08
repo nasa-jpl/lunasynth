@@ -1,0 +1,4 @@
+sun_elevation: 0.1
+sun_azimuth: 0.0
+depth_output: true
+segmentation_output: true

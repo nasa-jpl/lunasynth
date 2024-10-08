@@ -1,0 +1,26 @@
+{
+    "scene": {
+        "sun_elevation": 0.1,
+        "sun_azimuth": 0.0,
+        "depth_output": true,
+        "segmentation_output": true
+    },
+    "trajectory": [
+        {
+            "t": 1.0,
+            "camera_x": 0.0,
+            "camera_y": 0.0,
+            "camera_z": 12.0,
+            "camera_pitch": -1.5707963267948963,
+            "camera_yaw": 0.0
+        },
+        {
+            "t": 2.0,
+            "camera_x": 0.0,
+            "camera_y": 0.0,
+            "camera_z": 14.0,
+            "camera_pitch": -1.5707963267948963,
+            "camera_yaw": 0.0
+        }
+    ]
+}

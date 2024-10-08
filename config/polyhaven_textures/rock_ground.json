@@ -1,0 +1,37 @@
+[
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/blend/8k/rock_ground/rock_ground_8k.blend",
+      "size": 275341,
+      "path": "rock_ground_8k.blend"
+    },
+    {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/rock_ground/rock_ground_diff_8k.jpg",
+        "size": 41520413,
+        "path": "textures/rock_ground_diff_8k.jpg"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/rock_ground/rock_ground_ao_8k.jpg",
+      "size": 42090941,
+      "path": "textures/rock_ground_ao_8k.jpg"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/rock_ground/rock_ground_arm_8k.exr",
+      "size": 133108159,
+      "path": "textures/rock_ground_arm_8k.exr"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/rock_ground/rock_ground_disp_8k.exr",
+      "size": 14204817,
+      "path": "textures/rock_ground_disp_8k.exr"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/rock_ground/rock_ground_nor_gl_8k.exr",
+      "size": 168445093,
+      "path": "textures/rock_ground_nor_gl_8k.exr"
+    },
+    {
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/rock_ground/rock_ground_rough_8k.exr",
+      "size": 41919275,
+      "path": "textures/rock_ground_rough_8k.exr"
+    }
+  ]

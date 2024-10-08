@@ -1,0 +1,31 @@
+cases: 4
+depth_output: false
+segmentation_output: true
+camera_type: "ORTHO"
+render_distributions:
+  camera/x:
+    type: "grid"
+    min: -3000.0
+    max:  3000.0
+    n_values: 6
+  camera/y:
+    type: "grid"
+    min: -3000.0
+    max:  3000.0
+    n_values: 6
+  camera/ortho_scale:
+    type: "uniform"
+    min: 400
+    max: 1000
+  camera/yaw:
+    type: "uniform"
+    min: 3.14
+    max: 3.16
+  sun/elevation:
+    type: "uniform"
+    min: 0.1
+    max: 0.2
+  sun/azimuth:
+    type: "uniform"
+    min: 0.0
+    max: 6.28

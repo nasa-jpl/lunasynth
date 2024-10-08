@@ -1,0 +1,46 @@
+rendering:
+  depth_output: false
+  segmentation_output: true
+  camera_type: "ORTHO"
+  render_engine: CYCLES
+  denoise: true
+  sampling_render: 2048
+  resolution_x: 1000
+  resolution_y: 1000
+base_mesh:
+  meshes: ["../../moon_data/pgda78_most/*_final_adj_5mpp_surf/pieces_2km/*_final_adj_5mpp_surf_piece_5_*.tif"]
+name: "ortho_nominal_v2"
+output:
+  save_blender_file: true
+  output_root: "../../generated_data/datasets/"
+terrain:
+  desired_spatial_resolution: 1.0
+  samples: 3
+  add_rocks: true
+  add_craters: true
+  rock_field:
+    rock_source: 'assets/rocks/generated_100verts'
+    h_min: 1.0
+    h_max: 10.0
+    material: "Regolith7_MAT"
+    density:
+      type: "uniform"
+      min: 0.01
+      max: 0.06
+  crater_field:
+    crater_type: "normal"
+    h_min: 2.0
+    h_max: 20.0
+    density:
+      type: "uniform"
+      min: 0.8
+      max: 1.2
+rendering_cases:
+  cases: 64
+  distributions:
+    sun/elevation:
+      type: "grid_list"
+      values: [0.002, 0.009, 0.017, 0.052, 0.087, 0.262, 0.785, 1.571]
+    sun/azimuth:
+      type: "grid_list"
+      values: [0.0, 0.785, 1.571, 2.356, 3.142, 3.927, 4.712, 5.498]

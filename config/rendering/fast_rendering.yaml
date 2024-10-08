@@ -1,0 +1,4 @@
+render_engine: BLENDER_EEVEE
+sampling_render: 16
+resolution_x: 128
+resolution_y: 128

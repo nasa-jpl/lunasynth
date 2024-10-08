@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/blend/8k/coast_sand_02/coast_sand_02_8k.blend",
+    "size": 229623,
+    "path": "coast_sand_02_8k.blend"
+  },
+  {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/gltf/8k/coast_sand_02/coast_sand_02_8k.gltf",
+    "size": 2691,
+    "path": "coast_sand_02_8k.gltf"
+  },
+  {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/gltf/8k/coast_sand_02/coast_sand_02.bin",
+    "size": 2370068,
+    "path": "coast_sand_02.bin"
+  },
+  {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/coast_sand_02/coast_sand_02_ao_8k.jpg",
+    "size": 33073298,
+    "path": "textures/coast_sand_02_ao_8k.jpg"
+  },
+  {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/coast_sand_02/coast_sand_02_arm_8k.jpg",
+    "size": 33515386,
+    "path": "textures/coast_sand_02_arm_8k.jpg"
+  },
+  {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/coast_sand_02/coast_sand_02_diff_8k.jpg",
+    "size": 33430663,
+    "path": "textures/coast_sand_02_diff_8k.jpg"
+  },
+  {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/8k/coast_sand_02/coast_sand_02_disp_8k.png",
+    "size": 121243741,
+    "path": "textures/coast_sand_02_disp_8k.png"
+  },
+  {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/coast_sand_02/coast_sand_02_nor_dx_8k.exr",
+    "size": 99585143,
+    "path": "textures/coast_sand_02_nor_dx_8k.exr"
+  },
+  {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/coast_sand_02/coast_sand_02_nor_gl_8k.exr",
+    "size": 99051810,
+    "path": "textures/coast_sand_02_nor_gl_8k.exr"
+  }
+]

@@ -1,0 +1,33 @@
+cases: 4
+depth_output: true
+segmentation_output: true
+render_distributions:
+  camera/x:
+    type: "grid"
+    min: -1000.0
+    max:  1000.0
+    n_values: 4
+  camera/y:
+    type: "grid"
+    min: -1000.0
+    max:  1000.0
+    n_values: 6
+  camera/z:
+    type: "uniform"
+    min: 1000
+    max: 2000
+  camera/pitch:
+    type: "fixed"
+    value: -1.57
+  camera/yaw:
+    type: "uniform"
+    min: 3.14
+    max: 3.16
+  sun/elevation:
+    type: "uniform"
+    min: 0.1
+    max: 0.3
+  sun/azimuth:
+    type: "normal"
+    mean: 3.14
+    std: 0.3

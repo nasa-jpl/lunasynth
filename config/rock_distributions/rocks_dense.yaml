@@ -1,0 +1,10 @@
+terrains: 1
+rock_field:
+  density: 0.20
+  h_min: 0.4
+  h_max: 10.0
+crater_field:
+  density: 1.0
+  h_min: 3.0
+  h_max: 20.0
+desired_spatial_resolution: 1.0 # meters per pixel

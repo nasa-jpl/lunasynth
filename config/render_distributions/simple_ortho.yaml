@@ -1,0 +1,16 @@
+cases: 2
+depth_output: false
+segmentation_output: true
+camera_type: "ORTHO"
+render_distributions:
+  camera/ortho_scale:
+    type: "fixed"
+    value: 720
+  sun/elevation:
+    type: "uniform"
+    min: 0.1
+    max: 0.2
+  sun/azimuth:
+    type: "uniform"
+    min: 0.0
+    max: 6.28

@@ -1,0 +1,48 @@
+rendering:
+  depth_output: false
+  segmentation_output: true
+  camera_type: "ORTHO"
+  render_engine: CYCLES
+  denoise: true
+  sampling_render: 2048
+  resolution_x: 720
+  resolution_y: 720
+base_mesh:
+  meshes: ["../../moon_data/pgda78/Haworth_final_adj_5mpp_surf/pieces_2km/Haworth_final_adj_5mpp_surf_piece_12_*.tif"]
+name: "ortho_nominal"
+output:
+  save_blender_file: true
+  output_root: "../../generated_data/datasets/"
+terrain:
+  desired_spatial_resolution: 1.0
+  samples: 3
+  add_rocks: true
+  add_craters: true
+  rock_field:
+    rock_source: 'assets/rocks/generated_100verts'
+    h_min: 1.4
+    h_max: 10.0
+    material: "Regolith7_MAT"
+    density:
+      type: "uniform"
+      min: 0.04
+      max: 0.06
+  crater_field:
+    crater_type: "normal"
+    h_min: 2.0
+    h_max: 20.0
+    density:
+      type: "uniform"
+      min: 0.8
+      max: 1.2
+rendering_cases:
+  cases: 30
+  distributions:
+    sun/elevation:
+      type: "uniform"
+      min: 0.1
+      max: 0.2
+    sun/azimuth:
+      type: "uniform"
+      min: 0.0
+      max: 6.28
