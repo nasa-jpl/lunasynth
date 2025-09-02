@@ -88,7 +88,9 @@ class CfaModel:
         q = self.q(self.density)
 
         CFA_for_h_min = self.density * np.exp(-q * self.value_min)
-
+        if CFA_for_h_min <= 0.00001:
+            CFA_for_h_min = self.density * 0.01  # e.g. enforce at least 1% coverage
+            
         f = interp1d(NumCDF, D[:-1], kind="cubic", fill_value="extrapolate")
 
         dia = []

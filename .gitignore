@@ -1,0 +1,4 @@
+data/
+generated_data/
+__pycache__
+*.log
