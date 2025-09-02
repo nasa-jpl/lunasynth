@@ -1,4 +1,4 @@
 data/
-generated_data/
+generated_data/datasets/
 __pycache__
 *.log
