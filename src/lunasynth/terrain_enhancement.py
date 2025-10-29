@@ -88,7 +88,9 @@ class CfaModel:
         q = self.q(self.density)
 
         CFA_for_h_min = self.density * np.exp(-q * self.value_min)
-
+        if CFA_for_h_min <= 0.00001:
+            CFA_for_h_min = self.density * 0.01  # e.g. enforce at least 1% coverage
+            
         f = interp1d(NumCDF, D[:-1], kind="cubic", fill_value="extrapolate")
 
         dia = []
@@ -1053,10 +1055,11 @@ class Terrain:
         if terrain_dict.get("add_craters", True):
             crater_field = CraterField()
             crater_density = sample(terrain_dict["crater_field"]["density"])
+            height, width = elevation_data.shape
             crater_field.generate(
                 k=crater_density,
-                size_y=ymax - ymin,
-                size_x=xmax - xmin,
+                size_y=height,
+                size_x=width,
                 h_min=terrain_dict["crater_field"]["h_min"],
                 h_max=terrain_dict["crater_field"]["h_max"],
                 x_init=0,
