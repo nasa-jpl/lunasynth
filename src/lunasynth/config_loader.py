@@ -34,12 +34,10 @@ class ConfigLoader:
         """Load yaml file and optionally update the yaml data with a dictionary of updates.
 
         Args:
-        ----
             config_file (str): Path to the yaml file.
             updates (dict, optional): Dictionary of updates to apply to the yaml data. Defaults to False.
 
         Returns:
-        -------
             dict: The yaml data.
 
         """
@@ -69,11 +67,9 @@ class ConfigLoader:
         """Convert a list of arguments to a dictionary of updates.
 
         Args:
-        ----
             args (list[str]): List of arguments in the form key=value.
 
         Returns:
-        -------
             dict: Dictionary of updates.
 
         """
@@ -114,12 +110,10 @@ class ConfigLoader:
         """Update yaml data with a dictionary of updates.
 
         Args:
-        ----
             data (dict): The yaml data.
             updates (dict): Dictionary of updates to apply to the yaml data.
 
         Returns:
-        -------
             dict: The updated yaml data.
 
         """

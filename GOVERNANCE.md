@@ -117,6 +117,6 @@ Additional meetings may be held if consensus is not met or to discuss significan
 
 Overall manager of the project with final authority over all key decisions when consensus cannot be reached within the TSC or PSC. The product manager is often chosen at the onset of project initiation and can be reassigned by the PMC (with institutional approval, if applicable).
 
-# Acknowledgements
+## Acknowledgements
 
 Much of this governance model was adapted from the other notable open source projects including [node.js](https://github.com/nodejs/node/blob/main/GOVERNANCE.md), [OpenSSL](https://www.openssl.org/policies/omc-bylaws.html), [PostgresQL](https://www.postgresql.org/developer/), and [OpenMCT](https://github.com/nasa/openmct/blob/master/CONTRIBUTING.md). We would like to thank those projects for setting the foundation upon which this model was built.

@@ -26,7 +26,6 @@ class DEM:
         """Initialize a DEM object from a given file path.
 
         Args:
-        ----
         file_path (str): Path to the DEM file (GeoTIFF)
 
         """
@@ -68,14 +67,12 @@ class DEM:
         """Crop the DEM to a given bounding box.
 
         Args:
-        ----
             x1 (float): Left coordinate of the bounding box
             y1 (float): Top coordinate of the bounding box
             x2 (float): Right coordinate of the bounding box
             y2 (float): Bottom coordinate of the bounding box
 
         Raises:
-        ------
             ValueError: If the bounding box is outside the DEM bounds
 
         """
@@ -104,11 +101,9 @@ class DEM:
         """Increase the resolution of the DEM by a given factor using bilinear interpolation.
 
         Args:
-        ----
             factor (float): Zoom factor > 1 (default is 2.0)
 
         Raises:
-        ------
             ValueError: If the zoom factor is less than or equal to 1
 
         """
@@ -195,13 +190,11 @@ def compute_sun_elevation_azimuth(latitude: float, sun_hour_normalized: float = 
     and 1 is summer. Lunar declination is assumed to be 1.54 degrees.
 
     Args:
-    ----
         latitude (float): Latitude in radians
         sun_hour_normalized (float): Sun hour normalized to the range (-1, 1)
         sun_season: Sun season normalized to the range (-1, 1)
 
     Returns:
-    -------
         Tuple[float, float]: Elevation and azimuth of the sun in radians
 
     """

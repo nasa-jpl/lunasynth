@@ -6,3 +6,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# documentation build output
+docs/_build/
+docs/api/

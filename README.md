@@ -1,12 +1,12 @@
-
-<h1 style="display: flex; align-items: center;">
-  <img width="80" height="80" src="docs/lunasynth_logo_transparent_background.png" alt="LuNaSynth logo" style="margin-right: 16px;">
- 
-</h1>
+<img width="80" height="80" src="docs/lunasynth_logo_transparent_background.png" alt="LuNaSynth logo">
 
 # Synthetic Generation of Lunar Terrain (LuNaSynth)
 
+[![Tests](https://github.com/nasa-jpl/lunasynth/actions/workflows/tests.yml/badge.svg)](https://github.com/nasa-jpl/lunasynth/actions/workflows/tests.yml)
+[![Docs](https://github.com/nasa-jpl/lunasynth/actions/workflows/docs.yml/badge.svg)](https://nasa-jpl.github.io/lunasynth/)
+
 This project has tools to generate images of lunar terrain for navegation testing.
+The documentation, including the API reference, is at https://nasa-jpl.github.io/lunasynth/.
 
 ## Quick Start
 

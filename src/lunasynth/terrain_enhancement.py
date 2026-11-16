@@ -425,7 +425,6 @@ class RockField:
         The height of the rocks is randomly generated between h_min and h_max.
 
         Args:
-        ----
             k (float): The CFA value as a decimal (e.g. CFA5% would have an input of CFA=0.05)
             size_x (float): The size of the rock field in the x direction.
             size_y (float): The size of the rock field in the y direction.
