@@ -1,12 +1,12 @@
-
-<h1 style="display: flex; align-items: center;">
-  <img width="80" height="80" src="docs/lunasynth_logo_transparent_background.png" alt="LuNaSynth logo" style="margin-right: 16px;">
- 
-</h1>
+<img width="80" height="80" src="docs/lunasynth_logo_transparent_background.png" alt="LuNaSynth logo">
 
 # Synthetic Generation of Lunar Terrain (LuNaSynth)
 
+[![Tests](https://github.com/nasa-jpl/lunasynth/actions/workflows/tests.yml/badge.svg)](https://github.com/nasa-jpl/lunasynth/actions/workflows/tests.yml)
+[![Docs](https://github.com/nasa-jpl/lunasynth/actions/workflows/docs.yml/badge.svg)](https://nasa-jpl.github.io/lunasynth/)
+
 This project has tools to generate images of lunar terrain for navegation testing.
+The documentation, including the API reference, is at https://nasa-jpl.github.io/lunasynth/.
 
 ## Quick Start
 
@@ -44,13 +44,13 @@ Python dependencies are declared in `pyproject.toml`. Install them using
 [lunasynth]$ python3 -m pip install -e .
 ```
 
-If you use poetry (reconmmended for development), install all dependencies on its own virtual environment
+If you use [uv](https://docs.astral.sh/uv/) (recommended for development), install all dependencies on its own virtual environment. uv also downloads the required Python version if needed
 ```bash
-[lunasynth]$ poetry install
+[lunasynth]$ uv sync
 ```
-Once you install the dependencies, append `poetry run` to any command to use the dependencies installed in the virtual environment. Alternatively, you can activate the virtual environment with 
+Once you install the dependencies, prepend `uv run` to any command to use the dependencies installed in the virtual environment. Alternatively, you can activate the virtual environment with 
 ```bash
-[lunasynth]$ poetry shell
+[lunasynth]$ source .venv/bin/activate
 ```
 
 Check that the installation was successful by running the tests

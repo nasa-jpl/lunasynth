@@ -1,57 +1,83 @@
-[tool.poetry]
+[project]
 name = "lunasynth"
 version = "0.8.0"
 description = "Generate synthetic lunar images using Blender"
-authors = ["Daniel Pastor <daniel.pastor.moreno@jpl.nasa.gov>"]
+authors = [{ name = "Daniel Pastor", email = "daniel.pastor.moreno@jpl.nasa.gov" }]
 readme = "README.md"
 license = "Apache-2.0"
-packages = [{include = "lunasynth", from = "src"}]
+license-files = ["LICENSE"]
+requires-python = "==3.11.10"
+dependencies = [
+    "bpy>=4.1.0,<5",
+    "argcomplete>=3.3.0,<4",
+    "scipy>=1.13.0,<2",
+    "matplotlib>=3.9.0,<4",
+    "openexr>=3.2.4,<4",
+    "h5py>=3.11.0,<4",
+    "opencv-python>=4.9.0.80,<5",
+    "ipykernel>=6.29.4,<7",
+    "numpy>=1.26.4,<2",
+    "opencv-python-headless>=4.9.0.80,<5",
+    "trimesh>=4.4.0,<5",
+    "pyglet<2",
+    "rasterio>=1.3.10,<2",
+    "plotly>=5.22.0,<6",
+    "bs4>=0.0.2,<0.0.3",
+    "pyarrow>=16.1.0,<17",
+    "humanize>=4.9.0,<5",
+    "tabulate>=0.9.0,<0.10",
+    "imageio>=2.34.2,<3",
+    "numba>=0.60.0,<0.61",
+    "types-pyyaml>=6.0.12.20240917,<7",
+    "pandas>=2.2.3,<3",
+    "pyyaml>=6.0.2,<7",
+    "tqdm>=4.66.5,<5",
+]
 
-[tool.poetry.dependencies]
-python = "3.11.10" 
-bpy = "^4.1.0"
-argcomplete = "^3.3.0"
-scipy = "^1.13.0"
-matplotlib = "^3.9.0"
-openexr = "^3.2.4"
-h5py = "^3.11.0"
-opencv-python = "^4.9.0.80"
-ipykernel = "^6.29.4"
-numpy = "^1.26.4"
-opencv-python-headless = "^4.9.0.80"
-trimesh = "^4.4.0"
-pyglet = "<2"
-rasterio = "^1.3.10"
-plotly = "^5.22.0"
-bs4 = "^0.0.2"
-pyarrow = "^16.1.0"
-humanize = "^4.9.0"
-tabulate = "^0.9.0"
-imageio = "^2.34.2"
-numba = "^0.60.0"
-types-pyyaml = "^6.0.12.20240917"
+[project.scripts]
+create_rock_field = "lunasynth.cli.create_rock_field:main"
+load_rocks = "lunasynth.cli.load_rocks:main"
+generate_dataset = "lunasynth.cli.generate_enhanced_moon_terrain_dataset:main"
 
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.4.8"
-pytest = "^8.2.1"
-pytest-cov = "^5.0.0"
-pytest-mock = "^3.14.0"
-mypy = "^1.10.0"
-pytest-sugar = "^1.0.0"
-sphinx = "^7.3.7"
-pydata-sphinx-theme = "^0.15.4"
-sphinx-markdown-tables = "^0.0.17"
-nbsphinx = "^0.9.4"
+[dependency-groups]
+dev = [
+    "ruff>=0.4.8,<0.5",
+    "pytest>=8.2.1,<9",
+    "pytest-cov>=5.0.0,<6",
+    "pytest-mock>=3.14.0,<4",
+    "mypy>=1.10.0,<2",
+    "pytest-sugar>=1.0.0,<2",
+]
+docs = [
+    "sphinx>=9.0,<9.1",
+    "myst-nb>=1.4,<2",
+    "myst-parser>=5.1,<5.3",
+    "pydata-sphinx-theme>=0.24,<0.25",
+    "sphinx-autoapi>=3.9,<4",
+    "sphinx-copybutton>=0.5.2,<0.6",
+    "sphinx-design>=0.8,<0.9",
+    "sphinxcontrib-mermaid>=2.1,<3",
+]
+playground = [
+    "streamlit>=1.38.0,<2",
+    "panel>=1.4.3,<2",
+    "pyside6>=6.7.0,<7",
+]
 
-[tool.poetry.group.playground.dependencies]
-streamlit = "^1.38.0"
-panel = "^1.4.3"
-pyside6 = "^6.7.0"
+[tool.uv]
+# poetry installed every non-optional group by default; keep that behavior
+default-groups = ["dev", "docs", "playground"]
 
 [tool.pytest.ini_options]
 addopts = "--verbose --cov=src --cov-report=html"
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.coverage.run]
+data_file = "tmp/coverage/.coverage"
+
+[tool.coverage.html]
+directory = "tmp/coverage/html"
 
 [tool.mypy]
 python_version = "3.11"
@@ -82,11 +108,11 @@ lint.select = [
 ]
 #    "D",      # pydocstyle
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.ruff.lint.isort]
+# lunasynth imports are sorted together with third-party packages
+known-third-party = ["lunasynth"]
+extra-standard-library = ["tomllib"]  # stdlib since 3.11, newer than ruff's default target
 
-[tool.poetry.scripts]
-create_rock_field = "lunasynth.cli.create_rock_field:main"
-load_rocks = "lunasynth.cli.load_rocks:main"
-generate_dataset = "lunasynth.cli.generate_enhanced_moon_terrain_dataset:main"
+[build-system]
+requires = ["uv_build>=0.9.18,<0.10"]
+build-backend = "uv_build"

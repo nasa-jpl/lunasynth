@@ -31,9 +31,17 @@ import tqdm
 import yaml
 from lunasynth.dem_tools import DEM
 
+
+def get_log_dir() -> Path:
+    """Directory for log files, set with LUNASYNTH_LOG_DIR. Defaults to the current directory."""
+    log_dir = Path(os.environ.get("LUNASYNTH_LOG_DIR", "."))
+    log_dir.mkdir(parents=True, exist_ok=True)
+    return log_dir
+
+
 # set logging for render to a different file and not the terminal
 logging.basicConfig(
-    filename="blender_render.log",
+    filename=get_log_dir() / "blender_render.log",
     filemode="w",
     format="%(asctime)s - %(levelname)s - %(message)s",
     level=logging.INFO,

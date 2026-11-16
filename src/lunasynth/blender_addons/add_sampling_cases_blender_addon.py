@@ -32,7 +32,7 @@ from bpy.props import (  # type: ignore[attr-defined]
 
 # activate virtual environment or define VIRTUAL_ENV environment variable
 # cd to lunasynth root directory
-# poetry shell
+# source .venv/bin/activate
 # blender --python src/lunasynth/add_rocks_blender_addon.py
 
 venv_path = os.environ.get("VIRTUAL_ENV")

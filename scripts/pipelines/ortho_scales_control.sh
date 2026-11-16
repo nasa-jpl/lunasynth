@@ -1,10 +1,14 @@
 #!/bin/bash
 
+# Directory where the dataset is written
+OUTPUT_DIR="${OUTPUT_DIR:-tmp/datasets}"
+
 python src/lunasynth/cli/generate_enhanced_moon_terrain_dataset.py \
     --dataset-config config/datasets/ortho_scales.yaml \
     --set \
     name=ortho_scales_control \
     base_mesh.meshes=["assets/base_meshes/NPB_final_adj_5mpp_surf_piece_1km_2_12.tif"] \
+    output.output_root="$OUTPUT_DIR" \
     terrain.add_rocks=false \
     terrain.add_craters=false \
     rendering.resolution_x=100 \

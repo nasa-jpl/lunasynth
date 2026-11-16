@@ -29,7 +29,7 @@ pipeline_files = pipelines_path.glob("*.sh")
 
 
 @pytest.mark.parametrize("pipeline_file", pipeline_files)
-def test_pipelines(pipeline_file):
+def test_pipelines(pipeline_file, tmp_path):
     # run the pipeline
     print(f"Running pipeline {str(pipeline_file)}")
     # Ensure the script is executable
@@ -42,7 +42,7 @@ def test_pipelines(pipeline_file):
             check=True,  # check=True raises an exception if the return code is not 0
             capture_output=True,  # capture_output returns bytes, convert to string
             text=True,  # capture_output returns bytes, convert to string
-            env=os.environ,  # pass the environment variables
+            env={**os.environ, "OUTPUT_DIR": str(tmp_path)},  # pass the environment variables, write outputs to tmp
             cwd=str(
                 pipeline_file.parent.parent.parent
             ),  # set the working directory to the parent of the pipeline folde

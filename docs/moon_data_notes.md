@@ -1,13 +1,10 @@
+# Moon Data Notes
 
+## Moon DEM data sources
 
-
-Moon DEM data sources:
 - [Lunar Reconnaissance Orbiter (LRO) LOLA](https://astrogeology.usgs.gov/search/map/Moon/LRO/LOLA/Lunar_LRO_LrocKaguya_DEMmerge_60N60S_512ppd)
     - [DEM, 22GB](https://planetarymaps.usgs.gov/mosaic/LolaKaguya_Topo/Lunar_LRO_LOLAKaguya_Shade_60N60S_512ppd.tif)
     - [Relief, 11GB](https://planetarymaps.usgs.gov/mosaic/LolaKaguya_Topo/Lunar_LRO_LOLAKaguya_DEMmerge_60N60S_512ppd.tif)
-
-
-
 
 ### Chandrayaan-3
 
@@ -22,7 +19,6 @@ not all of them can be downloaded
  
 ![alt text](images/image-7.png)
 
-![alt text](images/image-8.png)
 
 ![alt text](images/image-9.png)
 
@@ -64,7 +60,6 @@ Moon metadata:
 - time
 - camera settings
 
-![alt text](image.png)
 
 Example of closeup 
 
@@ -75,17 +70,14 @@ Rocks from Apollo
 
 ![alt text](images/image-2.png)
 
-![alt text](moon_pictures/AS16-116-18602HR.jpg)
 
 Chandraayan-3
 
-![alt text](TCAM5.png)
 
-![alt text](TCAM2.png)
 
 ## Direct photo generation
 
-- [DeepMoon]()
+- DeepMoon
 
 LRO 1m DEM Shaded Relief
 
@@ -144,13 +136,13 @@ Create a table with a summary for each DEM. The table will contain the following
 
 Run with 
 ```bash
-poetry run python src/data_tools/create_moon_dems_catalog.py
+uv run python src/data_tools/create_moon_dems_catalog.py
 ```
 
 You might need to run an http server to see the local images. 
 
 ```bash
-poetry run python src/data_tools/file_server.py --directory <path_to_DEM_folder>
+uv run python src/data_tools/file_server.py --directory <path_to_DEM_folder>
 ``` 
 
 ## Chang'e-3 Data

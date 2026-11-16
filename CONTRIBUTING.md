@@ -75,8 +75,7 @@ Commit should always be atomic. Keep solutions isolated whenever possible. Fille
 ### Submit a Pull Request
 Pull requests are the core way our project will receive your patch contributions. Navigate to your branch on your own fork within the version control system, and submit a pull request or submit the patch text to our project. 
 
-Please make sure to provide a meaningful text description to your pull requests, whenever submitted. Our pull-request template will be auto-generated for you when you create your pull-request. See the template 
-[here](.github/PULL_REQUEST_TEMPLATE.md). 
+Please make sure to provide a meaningful text description to your pull requests, whenever submitted.
 
 **Working on your first Pull Request?** See guide: [How to Contribute to an Open Source Project on GitHub](https://kcd.im/pull-request)
 
@@ -212,7 +211,9 @@ The overall structure of our project documentation is as follows:
   - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) - best practices and guidance on how to work well with other people in the project, and suggestions on dealing with interpersonal issues
   - [CONTRIBUTING.md](CONTRIBUTING.md) - guidance on contributing to the project
   - `*.py` - inline documentation available inside code files
+  - `docs/` - guides and notes, see [docs/lunasynth_package.md](docs/lunasynth_package.md#documentation) for how to build and add pages
 - Hosted documentation
+  - [Documentation site](https://nasa-jpl.github.io/lunasynth/) - user guide, tutorials, and API reference generated from the docstrings
   - [LUNASYNTH Wiki Main-page](https://github.com/nasa-jpl/lunasynth/wiki) - Wiki pages for more detailed information about the project
     - [Developer Documentation](https://github.com/nasa-jpl/lunasynth/wiki/Developer-Documentation) - a page detailing how to set up your local development environment 
 

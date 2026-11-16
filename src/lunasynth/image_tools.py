@@ -32,11 +32,9 @@ def load_exr(file_path: str):
     """Load an EXR file and return the image data and channel names.
 
     Args:
-    ----
         file_path (str): The path to the EXR file.
 
     Returns:
-    -------
         np.ndarray: The image data.
         list[str]: The channel names.
 
@@ -77,7 +75,6 @@ def overlay_images(
     """Overlay an image on top of another image.
 
     Args:
-    ----
         base_image_path (str): The path to the base image.
         overlay_image_path (str): The path to the overlay image.
         output_path (str): The path to save the output image.
@@ -136,7 +133,6 @@ def display_exr(img: np.ndarray, channels: list[str]) -> None:
     """Display an EXR image.
 
     Args:
-    ----
         img (np.ndarray): The image data.
         channels (list[str]): The channel names.
 
@@ -175,7 +171,6 @@ def get_frame_number(filename: str) -> int:
     """Extract the frame number from the filename.
 
     Args:
-    ----
         filename (str): The filename of the frame to extract its number.
 
     """

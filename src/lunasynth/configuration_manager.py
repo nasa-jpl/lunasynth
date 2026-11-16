@@ -207,7 +207,7 @@ class RenderingManager:
 
         self.logger = logging.getLogger(__name__)
 
-        progress_logger = logging.FileHandler("progress.log")
+        progress_logger = logging.FileHandler(bh.get_log_dir() / "progress.log")
         progress_logger.setLevel(logging.INFO)
         progress_logger.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
         self.logger.addHandler(progress_logger)
