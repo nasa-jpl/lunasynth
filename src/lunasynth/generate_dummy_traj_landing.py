@@ -11,8 +11,17 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import argparse
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
+
+parser = argparse.ArgumentParser(description="Generate a dummy landing trajectory.")
+parser.add_argument("--output-dir", type=str, default=".", help="Directory to save trajectory.csv and trajectory.png.")
+args = parser.parse_args()
+output_dir = Path(args.output_dir)
+output_dir.mkdir(parents=True, exist_ok=True)
 
 zref = 550.0
 x = np.array([-300.0, 0.0, zref])
@@ -50,11 +59,11 @@ plt.xlabel("x")
 plt.ylabel("z")
 plt.axis("equal")
 plt.grid()
-plt.savefig("trajectory.png", dpi=600)
+plt.savefig(output_dir / "trajectory.png", dpi=600)
 
 # Save trajectory to file
 np.savetxt(
-    "trajectory.csv",
+    output_dir / "trajectory.csv",
     x_array,
     delimiter=",",
     header="t,camera_x,camera_y,camera_z,camera_pitch,camera_yaw",

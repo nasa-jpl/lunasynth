@@ -64,6 +64,12 @@ addopts = "--verbose --cov=src --cov-report=html"
 testpaths = ["tests"]
 pythonpath = ["src"]
 
+[tool.coverage.run]
+data_file = "tmp/coverage/.coverage"
+
+[tool.coverage.html]
+directory = "tmp/coverage/html"
+
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true
