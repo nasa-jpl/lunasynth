@@ -920,12 +920,13 @@ class CraterField:
         mesh.update()
         print(f"Time to update mesh {dth(time.time() - start)}")
 
-    def place_craters_dem(self, craters: list[Crater], dem: np.ndarray) -> np.ndarray:
-        x_coords = np.array([crater.x for crater in craters])
-        y_coords = np.array([crater.y for crater in craters])
-        diameters = np.array([crater.diameter for crater in craters])
+    def place_craters_dem(self, craters: list[Crater], dem: np.ndarray, pixel_size: float = 1.0) -> np.ndarray:
+        # crater x, y and diameter are in meters; convert to DEM pixels (rows follow y, columns follow x)
+        row_coords = np.array([crater.y for crater in craters]) / pixel_size
+        col_coords = np.array([crater.x for crater in craters]) / pixel_size
+        diameters = np.array([crater.diameter for crater in craters]) / pixel_size
         start = time.time()
-        dem = place_crater_dems_numba(x_coords, y_coords, diameters, dem)
+        dem = place_crater_dems_numba(row_coords, col_coords, diameters, dem, pixel_size)
         print(f"Time to add craters {dth(time.time() - start)}")
         return dem
 
@@ -962,7 +963,7 @@ class CraterField:
 
 @njit(parallel=True)
 def place_crater_dems_numba(
-    x_coords: np.ndarray, y_coords: np.ndarray, diameters: np.ndarray, dem: np.ndarray
+    row_coords: np.ndarray, col_coords: np.ndarray, diameters: np.ndarray, dem: np.ndarray, pixel_size: float = 1.0
 ) -> np.ndarray:
     def crater_depth_numba(
         r: float,
@@ -987,9 +988,9 @@ def place_crater_dems_numba(
         return h
 
     crater_effect_multiplier = 3.5  # how many radius away to affect
-    for idx in prange(len(x_coords)):
-        x = x_coords[idx]
-        y = y_coords[idx]
+    for idx in prange(len(row_coords)):
+        x = row_coords[idx]
+        y = col_coords[idx]
         diameter = diameters[idx]
 
         x_min = max(int(x - diameter * crater_effect_multiplier), 0)
@@ -1002,7 +1003,8 @@ def place_crater_dems_numba(
             for j in range(y_min, y_max):
                 d = np.sqrt((i - x) ** 2 + (j - y) ** 2)
                 if d < diameter * crater_effect_multiplier:
-                    crater_patch[i - x_min, j - y_min] = crater_depth_numba(d / diameter) * diameter
+                    # depth profile scales with diameter in meters
+                    crater_patch[i - x_min, j - y_min] = crater_depth_numba(d / diameter) * diameter * pixel_size
         dem[x_min:x_max, y_min:y_max] += crater_patch
     return dem
 
@@ -1034,6 +1036,7 @@ class Terrain:
             ymax = dem.bounds[3]
             xmin = dem.bounds[0]
             xmax = dem.bounds[2]
+            pixel_size = dem.res[0]
 
         dem_center_x = (xmin + xmax) / 2
         dem_center_y = (ymin + ymax) / 2
@@ -1063,7 +1066,7 @@ class Terrain:
                 y_init=0,
             )
             crater_field.save(str(Path(output_case_dir) / Path("crater_field.csv")))
-            elevation_data = crater_field.place_craters_dem(crater_field.craters, elevation_data)
+            elevation_data = crater_field.place_craters_dem(crater_field.craters, elevation_data, pixel_size)
 
         mesh_material = terrain_dict.get("mesh_material", "Regolith7_MAT")
         start_time = time.time()
