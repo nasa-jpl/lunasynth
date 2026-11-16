@@ -44,13 +44,13 @@ Python dependencies are declared in `pyproject.toml`. Install them using
 [lunasynth]$ python3 -m pip install -e .
 ```
 
-If you use poetry (reconmmended for development), install all dependencies on its own virtual environment
+If you use [uv](https://docs.astral.sh/uv/) (recommended for development), install all dependencies on its own virtual environment. uv also downloads the required Python version if needed
 ```bash
-[lunasynth]$ poetry install
+[lunasynth]$ uv sync
 ```
-Once you install the dependencies, append `poetry run` to any command to use the dependencies installed in the virtual environment. Alternatively, you can activate the virtual environment with 
+Once you install the dependencies, prepend `uv run` to any command to use the dependencies installed in the virtual environment. Alternatively, you can activate the virtual environment with 
 ```bash
-[lunasynth]$ poetry shell
+[lunasynth]$ source .venv/bin/activate
 ```
 
 Check that the installation was successful by running the tests

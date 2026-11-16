@@ -144,13 +144,13 @@ Create a table with a summary for each DEM. The table will contain the following
 
 Run with 
 ```bash
-poetry run python src/data_tools/create_moon_dems_catalog.py
+uv run python src/data_tools/create_moon_dems_catalog.py
 ```
 
 You might need to run an http server to see the local images. 
 
 ```bash
-poetry run python src/data_tools/file_server.py --directory <path_to_DEM_folder>
+uv run python src/data_tools/file_server.py --directory <path_to_DEM_folder>
 ``` 
 
 ## Chang'e-3 Data

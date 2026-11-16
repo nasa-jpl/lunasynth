@@ -19,7 +19,7 @@ import rasterio
 from rasterio.windows import Window
 
 # Example oneliner to cut all tiff files in a folder:
-# $ for file in ../moon_data/new_pgda78/*.tif; do poetry run python src/data_tools/cut_tiff.py $file "${file%.*}" --piece_size_km 2.0; done # noqa: E501
+# $ for file in ../moon_data/new_pgda78/*.tif; do uv run python src/data_tools/cut_tiff.py $file "${file%.*}" --piece_size_km 2.0; done # noqa: E501
 
 
 def cut_raster_into_pieces(input_tiff: str, output_folder: str, piece_size_km: float = 1):

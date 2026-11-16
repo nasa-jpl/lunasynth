@@ -15,9 +15,9 @@
 # - imagemagick
 #
 # To execute the python scripts, you need to have installed the python packages listed in the pyproject.toml file. 
-# Call this file from an environemtn with the required packages installed. For example, with poetry you can use:
-# `poetry run bash scripts/gdal_create.sh <input_geo_tiff_file>`, or
-# `poetry shell`, then just call `bash scripts/gdal_create.sh <input_geo_tiff_file>`
+# Call this file from an environemtn with the required packages installed. For example, with uv you can use:
+# `uv run bash scripts/gdal_create.sh <input_geo_tiff_file>`, or
+# `source .venv/bin/activate`, then just call `bash scripts/gdal_create.sh <input_geo_tiff_file>`
 
 
 # It is convenient to use it with xargs to process multiple files in parallel.

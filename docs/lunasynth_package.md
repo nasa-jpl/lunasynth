@@ -6,7 +6,7 @@
 Here there are described some of the decisions made during the development of the package. 
 
 - package structure: src: it provides isolation. Other options: flat
-- build system: poetry, it has a good dependency solver. Other options: flit, hatch, setuptools
+- build system: uv (with the uv_build backend), it has a fast dependency solver and manages python versions. Other options: poetry, flit, hatch, setuptools
 - testing framework: pytest, it is a good option for small projects. Other options: unittest, nose
 - documentation: sphinx, good support. Other options: mkdocs, pdoc3
 - coverage: pytest-cov, more convenient than coverage.py. Other options: coverage.py

@@ -1,0 +1,8 @@
+/tmp/
+/render_jobs/
+
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
