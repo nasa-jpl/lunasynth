@@ -29,6 +29,9 @@ dependencies = [
     "imageio>=2.34.2,<3",
     "numba>=0.60.0,<0.61",
     "types-pyyaml>=6.0.12.20240917,<7",
+    "pandas>=2.2.3,<3",
+    "pyyaml>=6.0.2,<7",
+    "tqdm>=4.66.5,<5",
 ]
 
 [project.scripts]
