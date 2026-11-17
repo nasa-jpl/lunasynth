@@ -106,6 +106,8 @@ autoapi_member_order = "groupwise"
 
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
+# "Attributes" sections as a field list; AutoAPI already documents dataclass fields
+napoleon_use_ivar = True
 
 # -- HTML output -------------------------------------------------------------
 

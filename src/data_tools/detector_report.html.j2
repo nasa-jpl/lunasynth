@@ -1,0 +1,313 @@
+{#- Jinja2 template of the crater detector report. Rendered by src/data_tools/detector_report.py;
+    open the generated report (tmp/detector_report.html by default), not this file. -#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LuNaSynth crater detector report</title>
+<style>
+.viz-root {
+  color-scheme: light;
+  --surface-1: #fcfcfb;
+  --page: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --code-bg: #f0efec;
+  --series-1: #2a78d6;   /* detected */
+  --series-2: #eb6834;   /* model */
+  --series-3: #1baf7a;   /* saturation */
+  --mark: #eb6834;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --page: #0d0d0d;
+    --text-primary: #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --code-bg: #262624;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --mark: #d95926;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --surface-1: #1a1a19;
+  --page: #0d0d0d;
+  --text-primary: #f0efec;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.10);
+  --code-bg: #262624;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --mark: #d95926;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.viz-root {
+  background: var(--page); color: var(--text-primary);
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  min-height: 100vh;
+}
+main { max-width: 1080px; margin: 0 auto; padding: 32px 24px 64px; }
+h1 { font-size: 28px; margin: 0 0 4px; }
+h2 { font-size: 20px; margin: 40px 0 8px; padding-top: 8px; }
+h3 { font-size: 16px; margin: 24px 0 8px; }
+p, li { color: var(--text-primary); }
+.lede { color: var(--text-secondary); margin: 0 0 16px; }
+.muted { color: var(--text-secondary); }
+a { color: var(--series-1); }
+nav.toc { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; margin: 12px 0 8px; }
+nav.toc a { text-decoration: none; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 16px 0; }
+pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+pre { background: var(--code-bg); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 8px 0 12px; }
+code { background: var(--code-bg); border-radius: 4px; padding: 1px 5px; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { color: var(--text-secondary); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.tiles { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.tile { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.2fr); gap: 20px; align-items: start; }
+@media (max-width: 760px) { .tile { grid-template-columns: 1fr; } }
+.tile h3 { margin-top: 0; grid-column: 1 / -1; }
+.map, .chart { width: 100%; height: auto; display: block; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--text-secondary); margin: 4px 0 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.key-line { width: 16px; height: 2px; border-radius: 1px; display: inline-block; }
+.key-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.key-ring { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--mark); display: inline-block; }
+.toggle { font: inherit; font-size: 13px; color: var(--text-secondary); background: none; border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+.toggle:hover { color: var(--text-primary); }
+.tooltip { position: fixed; pointer-events: none; background: var(--surface-1); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,.12);
+  display: none; z-index: 10; min-width: 150px; }
+.tooltip .value { font-weight: 600; }
+.tooltip .row { display: flex; align-items: center; gap: 6px; }
+.tooltip .label { color: var(--text-secondary); }
+.callout { border-left: 3px solid var(--axis); padding: 4px 12px; color: var(--text-secondary); margin: 12px 0; }
+ol.refs li { margin: 0 0 10px; }
+ol.refs .why { display: block; color: var(--text-secondary); font-size: 13px; }
+.theme-switch { float: right; }
+svg text { fill: var(--text-secondary); font-size: 11px; }
+.card h3 .file { display: block; font-weight: 400; font-size: 13px; color: var(--text-secondary); }
+.card h4 { margin: 18px 0 8px; font-size: 14px; }
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.gallery figure { margin: 0; border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: var(--surface-1); }
+.gallery figure:focus-visible, .hit:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
+.gallery .zoom { width: 100%; height: auto; display: block; border-radius: 4px; }
+.gallery .profile { width: 100%; height: 44px; display: block; margin-top: 6px; }
+.gallery figcaption { font-size: 12px; color: var(--text-secondary); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.gallery figcaption strong { color: var(--text-primary); }
+.gallery-note { margin: 0 0 10px; font-size: 13px; }
+details.table-view { margin-top: 12px; }
+details.table-view summary { cursor: pointer; color: var(--text-secondary); font-size: 13px; }
+details.table-view table { margin-top: 6px; }
+svg .ring { fill: none; stroke: var(--mark); stroke-width: 2; }
+svg .ring-gap { fill: none; stroke: var(--surface-1); stroke-width: 4; }
+svg .ring-label { fill: #ffffff; font-size: 10px; font-weight: 600; paint-order: stroke; stroke: #0b0b0b; stroke-width: 2.5px; }
+svg .series { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+svg .series-1 { stroke: var(--series-1); }
+svg .series-2 { stroke: var(--series-2); }
+svg .series-3 { stroke: var(--series-3); }
+svg .dot { fill: var(--series-1); stroke: var(--surface-1); stroke-width: 2; }
+svg .grid-line { stroke: var(--grid); stroke-width: 1; }
+svg .axis-line { stroke: var(--axis); stroke-width: 1; }
+.hit:hover .ring { stroke-width: 3; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+<main>
+<button class="toggle theme-switch" id="theme" hidden>Toggle dark mode</button>
+<h1>Crater detector report</h1>
+<p class="lede"><code>src/data_tools/estimate_dem_craters.py</code> finds the craters already present in a LuNaSynth base DEM and
+compares their size distribution with the crater model used to add smaller craters.</p>
+<nav class="toc">
+  <a href="#usage">Usage</a><a href="#method">Method</a><a href="#results">Results</a>
+  <a href="#validation">Validation</a><a href="#limitations">Limitations</a><a href="#references">References</a>
+</nav>
+<section id="usage">
+<h2>Usage</h2>
+<pre><code>uv run python src/data_tools/estimate_dem_craters.py &lt;base_dem.tif&gt; \
+    [--age 3.9] [--terrain highland|mare] [--min-diameter-px 10] \
+    [--min-depth-ratio 0.04] [--output-dir tmp/dem_craters]</code></pre>
+<table>
+<thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>dem</code></td><td>&ndash;</td><td>Base DEM GeoTIFF, in meters.</td></tr>
+<tr><td><code>--age</code></td><td>3.9</td><td>Surface age (Gyr) of the model curve. Polar highlands are about 3.5&ndash;3.9 Gyr old.</td></tr>
+<tr><td><code>--terrain</code></td><td><code>highland</code></td><td>Degradation rate of the model curve, <code>highland</code> or <code>mare</code>.</td></tr>
+<tr><td><code>--min-diameter-px</code></td><td>10</td><td>Smallest crater to detect, in pixels. Use 4 for Shape-from-Shading DEMs, which resolve smaller craters.</td></tr>
+<tr><td><code>--min-depth-ratio</code></td><td>0.04</td><td>Smallest depth / diameter of a crater (the visibility threshold of the model).</td></tr>
+<tr><td><code>--output-dir</code></td><td><code>tmp/dem_craters</code></td><td>Folder for the CSV and the figure.</td></tr>
+</tbody>
+</table>
+
+<h3>Examples</h3>
+<pre><code># LOLA tile (PGDA 78): reliable craters start at ~10 pixels = 50 m
+uv run python src/data_tools/estimate_dem_craters.py \
+    assets/base_meshes/NPC_final_adj_5mpp_surf_piece_2km_2_1.tif
+
+# Shape-from-Shading tile (PGDA 104): resolves craters down to ~4 pixels = 20 m
+uv run python src/data_tools/estimate_dem_craters.py \
+    assets/base_meshes/A310_SfS_5mpp_Leibnitz_Beta_piece_1km_r1600_c1200.tif --min-diameter-px 4</code></pre>
+
+<h3>Output</h3>
+<p>For a DEM <code>&lt;name&gt;.tif</code> the script writes two files and prints a table:</p>
+<ul>
+<li><code>&lt;name&gt;_craters.csv</code>: one row per crater with <code>column_px, row_px, diameter_m, depth_m</code>.</li>
+<li><code>&lt;name&gt;_csfd.png</code>: cumulative size-frequency distribution of the detections with the model, the production function, and geometric saturation.</li>
+<li>Printed: detected and model densities at several diameters, and the diffusivity <code>kappa_800</code> for which the model has as many craters as detected.</li>
+</ul>
+<pre><code>$ uv run python src/data_tools/estimate_dem_craters.py assets/base_meshes/NPC_final_adj_5mpp_surf_piece_2km_2_1.tif
+{{ example }}</code></pre>
+<p>The suggested <code>kappa_800</code> can be set in <code>terrain.crater_field</code> of a dataset configuration so the craters LuNaSynth adds
+continue the distribution of the base DEM. It is an upper bound of the diffusivity, because the detector misses part of the craters.</p>
+</section>
+
+<section id="method">
+<h2>Method</h2>
+<ol>
+<li><strong>Candidates.</strong> Scale-space maxima of the scale-normalized Laplacian of Gaussian of the elevation (Lindeberg, 1998) are bowl-shaped
+depressions. The scale of the maximum gives the radius, calibrated on synthetic craters (diameter &asymp; 5.2 &sigma;).</li>
+<li><strong>Regional slope.</strong> A plane fitted between 1.5 and 2.5 radii is subtracted.</li>
+<li><strong>Size refinement.</strong> The rim crest of the azimuthally averaged profile refines the radius.</li>
+<li><strong>Depth.</strong> As in Zhang et al. (2026): rim height is the mean elevation of a thin ring at the rim, floor is the lowest point near the center.
+Candidates with depth / diameter below <code>--min-depth-ratio</code> are dropped.</li>
+<li><strong>Shape tests.</strong> The topography within 1.5 radii must be nearly axisymmetric (its radial profile explains at least 60% of its variance),
+which rejects most depressions of rough terrain. The surroundings must not be curved by more than half the crater depth, which rejects the walls
+of craters larger than the searched range.</li>
+<li><strong>Duplicates.</strong> The same depression found at several scales is kept once, at its strongest response.</li>
+<li><strong>Model comparison.</strong> The model curve counts craters of the LuNaSynth model (Neukum et al., 2001 production and chronology,
+degradation by the diffusivities of Zhang et al., 2026) still deeper than the visibility threshold.</li>
+</ol>
+</section>
+
+<section id="results">
+<h2>Results on the base DEMs</h2>
+<p class="muted">All three tiles are 5 m/px polar DEMs. Detected densities are compared with the highland model on a 3.9 Gyr surface at the
+smallest detected diameter. Each tile shows the detections on its hillshade (numbered), their size distribution, and a close-up of every
+detection with its rim circle and azimuthally averaged profile (rim marked by the vertical line).</p>
+<div class="card">
+<table>
+<thead><tr><th>Tile</th><th>Size (km)</th><th>Smallest crater</th><th class="num">Detected</th><th class="num">Detected / km²</th>
+<th class="num">Recall-corrected / km²</th><th class="num">Model / km²</th><th class="num">Matching kappa_800 (m²/Myr)</th></tr></thead>
+<tbody>
+{{ summary_rows }}
+</tbody>
+</table>
+</div>
+{{ tiles }}
+<div class="callout">
+<strong>Reading the results.</strong> On the LOLA tiles, most pits in the hillshade are interpolation artifacts between altimetry tracks; the shape
+tests leave only a few real craters. The 2 km LOLA tile has more craters than the highland model, which suggests slower degradation at this polar
+site than at the equatorial highland sites of Zhang et al. (2026). On the Shape-from-Shading tile, the detected craters agree with the model within
+a factor of two once corrected for the detector's recall on that terrain ({{ sfs_recall }} of {{ sfs_injected }} injected craters found).
+</div>
+</section>
+
+<section id="validation">
+<h2>Validation</h2>
+<p>Synthetic craters (fresh and degraded normal craters of 12&ndash;40 pixels, 20 per 1.5 &times; 1.5 km tile, 4 tiles) were added to rough
+terrain with a power-law spectrum. A detection matches a crater if its center is within 0.3 diameters.</p>
+<div class="card">
+<h3>Recall on synthetic craters</h3>
+<table>
+<thead><tr><th>Background relief (std)</th><th class="num">Visible craters</th><th class="num">Found</th>
+<th>Diameter ratio, median (10&ndash;90%)</th><th class="num">False / km²</th></tr></thead>
+<tbody>
+{{ synthetic_rows }}
+</tbody>
+</table>
+<h3>False detections on terrain without craters</h3>
+<table>
+<thead><tr><th>Background relief (std)</th><th class="num">False detections / km²</th></tr></thead>
+<tbody>
+{{ null_rows }}
+</tbody>
+</table>
+</div>
+<p class="muted">Diameter ratio is detected diameter over the current rim diameter of the synthetic crater. Craters overlapping a neighbor are the
+most common misses. On real terrain the recall is lower than on synthetic terrain: on the Shape-from-Shading tile, {{ sfs_recall }} of craters added to
+it are found.</p>
+</section>
+<section id="limitations">
+<h2>Limitations</h2>
+<ul>
+<li><strong>Small counts.</strong> A 1&ndash;2 km tile has tens of craters at most; Poisson uncertainty on the density is ~20&ndash;40%. Fitting a size distribution
+with few craters is better done with Poisson timing analysis (Michael et al., 2016), as in <a href="https://github.com/ggmichael/craterstats">craterstats</a>.</li>
+<li><strong>LOLA polar DEMs.</strong> Most pixels of PGDA product 78 are interpolated between altimetry tracks, so the effective resolution is coarser than 5 m and
+varies across a tile; detections there are a lower bound.</li>
+<li><strong>Missed craters.</strong> Overlapping, very degraded, or irregular craters are usually missed; secondary craters are not distinguished from primaries.</li>
+<li><strong>Not a catalog.</strong> For catalog-quality detection on images, see deep-learning detectors such as Silburt et al. (2019) for DEMs and
+Zhuo et al. (2025) for LROC NAC images.</li>
+</ul>
+</section>
+
+<section id="references">
+<h2>References</h2>
+<ol class="refs">
+{{ references }}
+</ol>
+<p class="muted">Every reference was checked against Crossref. Generated by <code>src/data_tools/detector_report.py</code>.</p>
+</section>
+</main>
+<div class="tooltip" id="tooltip" role="status"></div>
+</div>
+<script>
+const tip = document.getElementById("tooltip");
+function showTip(x, y, rows) {
+  tip.replaceChildren();
+  for (const [value, label, series] of rows) {
+    const row = document.createElement("div");
+    row.className = "row";
+    if (series) {
+      const key = document.createElement("span");
+      key.className = "key-line";
+      key.style.background = `var(--${series})`;
+      row.appendChild(key);
+    }
+    const v = document.createElement("span"); v.className = "value"; v.textContent = value;
+    const l = document.createElement("span"); l.className = "label"; l.textContent = label;
+    row.append(v, l);
+    tip.appendChild(row);
+  }
+  tip.style.display = "block";
+  tip.style.left = Math.min(x + 14, window.innerWidth - tip.offsetWidth - 8) + "px";
+  tip.style.top = Math.min(y + 14, window.innerHeight - tip.offsetHeight - 8) + "px";
+}
+for (const node of document.querySelectorAll("[data-tip]")) {
+  const rows = JSON.parse(node.dataset.tip);
+  node.addEventListener("pointermove", e => showTip(e.clientX, e.clientY, rows));
+  node.addEventListener("pointerleave", () => { tip.style.display = "none"; });
+  node.addEventListener("focus", () => { const b = node.getBoundingClientRect(); showTip(b.right, b.top, rows); });
+  node.addEventListener("blur", () => { tip.style.display = "none"; });
+}
+const themeButton = document.getElementById("theme");
+themeButton.hidden = false;
+themeButton.addEventListener("click", () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+});
+</script>
+</body>
+</html>

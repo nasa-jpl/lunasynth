@@ -25,12 +25,12 @@ from pathlib import Path
 import bpy
 import humanize
 import lunasynth.blender_helper as blender_helper
+import lunasynth.craters as craters
 import lunasynth.dem_tools as dem_tools
 import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
 from mathutils import Vector
-from numba import njit, prange
 from scipy.interpolate import (
     RegularGridInterpolator,  # interp2d is deprecated
     interp1d,
@@ -46,9 +46,21 @@ def cumsumr(v: np.ndarray) -> np.ndarray:
     return np.cumsum(v[::-1])[::-1]
 
 
+# Rock abundance model of the Moon: q = A + B / k (Li & Wu, 2018, JGR Planets 123, 1061-1088, Eq. 6,
+# https://doi.org/10.1029/2017JE005496), fitted to rocks in Chang'E-3 descent images and LRO NAC images.
+LUNAR_ROCK_A = 0.5648
+LUNAR_ROCK_B = 0.01285
+
+
 @dataclass
 class CfaModel:
-    """Represents a cumulative frequency area model."""
+    """Cumulative fractional area model of rock size-frequency distributions.
+
+    The fraction of the surface covered by rocks larger than D is ``F(D) = k exp(-q(k) D)`` with
+    ``q(k) = A + B / k`` (Golombek & Rapp, 1997, https://doi.org/10.1029/96JE03319). The default A and B are the
+    lunar values of Li & Wu (2018). This model describes rocks only; craters follow power-law size distributions,
+    see :mod:`lunasynth.craters`.
+    """
 
     value_min: float
     value_max: float
@@ -60,8 +72,8 @@ class CfaModel:
         value_max: float,
         density: float,
         n_points: int = 1000,
-        A: float = 0.5648,
-        B: float = 0.01285,
+        A: float = LUNAR_ROCK_A,
+        B: float = LUNAR_ROCK_B,
     ):
         self.value_min = value_min
         self.value_max = value_max
@@ -419,6 +431,8 @@ class RockField:
         x_init: float = 0,
         y_init: float = 0,
         max_type_rocks: int = 15,
+        A: float = LUNAR_ROCK_A,
+        B: float = LUNAR_ROCK_B,
     ) -> None:
         """Generates a rock field with rocks of random size, height, and position.
         The rocks are placed randomly within the specified size of the rock field.
@@ -434,6 +448,8 @@ class RockField:
             x_init (float): The initial x position of the rocks. Default is 0.
             y_init (float): The initial y position of the rocks. Default is 0.
             max_type_rocks (int): The maximum number of different types of rocks. Default is 15.
+            A (float): Coefficient A of the rock abundance model q = A + B / k. Default is the lunar value.
+            B (float): Coefficient B of the rock abundance model. Default is the lunar value.
 
         """
         self.size_x = size_x
@@ -442,7 +458,7 @@ class RockField:
         self.h_min = h_min
         self.h_max = h_max
 
-        self.cfa_model = CfaModel(h_min, h_max, k)
+        self.cfa_model = CfaModel(h_min, h_max, k, A=A, B=B)
         rock_diameters, computed_CFA = self.cfa_model.compute_values(size_x * size_y, seed=seed)
         n_rocks = len(rock_diameters)
 
@@ -730,26 +746,88 @@ def sample(distribution: dict | float) -> float:
         raise ValueError(msg)
 
 
+# smallest crater, in pixels of the base DEM, that the base DEM is assumed to already contain (Robbins et al., 2014,
+# consider craters smaller than ~10 pixels unreliable to measure)
+DEFAULT_RESOLVABLE_PIXELS = 10.0
+
+
+def crater_field_arguments(crater_config: dict, base_pixel_size: float) -> dict:
+    """Arguments of :meth:`CraterField.generate` from the ``terrain.crater_field`` dataset configuration.
+
+    Values can be distributions, see :func:`sample`. Only craters smaller than ``resolvable_pixels`` pixels of the
+    base DEM (``base_pixel_size``) are added, because larger craters are already part of the base DEM. Set
+    ``d_max`` to override it.
+    """
+    if "density" in crater_config:
+        msg = (
+            "crater_field.density is no longer supported: crater densities now follow the lunar production function. "
+            "Set crater_field.surface_age_ga (Gyr) and crater_field.terrain ('highland' or 'mare') instead."
+        )
+        raise ValueError(msg)
+    d_min = crater_config.get("d_min", crater_config.get("h_min", 2.0))
+    resolvable = sample(crater_config.get("resolvable_pixels", DEFAULT_RESOLVABLE_PIXELS))
+    d_max = crater_config.get("d_max", crater_config.get("h_max"))
+    d_max = resolvable * base_pixel_size if d_max is None else min(sample(d_max), resolvable * base_pixel_size)
+    arguments = {
+        "surface_age_ga": sample(crater_config.get("surface_age_ga", 3.9)),
+        "terrain": crater_config.get("terrain", "highland"),
+        "d_min": sample(d_min),
+        "d_max": d_max,
+        "morphology": crater_config.get("morphology", "auto"),
+        "visibility_depth_ratio": sample(
+            crater_config.get("visibility_depth_ratio", craters.DEFAULT_VISIBILITY_DEPTH_RATIO)
+        ),
+        "chronology": crater_config.get("chronology", "neukum2001"),
+    }
+    if "regolith_thickness" in crater_config:
+        arguments["regolith_thickness"] = sample(crater_config["regolith_thickness"])
+    for key in ("kappa_800", "phi"):
+        if key in crater_config:
+            arguments[key] = sample(crater_config[key])
+    return arguments
+
+
 @dataclass
 class Crater:
+    """A crater, as generated and as currently visible after degradation.
+
+    Positions are in meters in the terrain frame, centered on the base mesh (the same frame as rocks).
+
+    Attributes:
+        x: Center x coordinate, m.
+        y: Center y coordinate, m.
+        diameter: Current rim-to-rim diameter, m. Degradation widens craters up to ~1.5 times.
+        diameter_initial: Diameter of the fresh crater, m.
+        morphology_initial: Morphology of the fresh crater, one of :data:`lunasynth.craters.MORPHOLOGIES`.
+        morphology: Current morphology. Degraded central-mound, flat-bottomed, and concentric craters become normal.
+        age_myr: Age of the crater, Myr.
+        degradation_state: Accumulated topographic diffusion K = kappa * age, m^2.
+        depth: Current rim-to-floor depth, m.
+        rim_height: Current rim height above the surroundings, m.
+
+    """
+
     x: float
     y: float
     diameter: float
-    transect: np.ndarray
-    type: str
-    depth: float
-    rim_height: float
-    elevation_patch: np.ndarray
+    diameter_initial: float | None = None
+    morphology_initial: str = "normal"
+    morphology: str = "normal"
+    age_myr: float = 0.0
+    degradation_state: float = 0.0
+    depth: float | None = None
+    rim_height: float | None = None
 
-    def __init__(
-        self,
-        x: float,
-        y: float,
-        diameter: float,
-    ):
-        self.x = x
-        self.y = y
-        self.diameter = diameter
+    def __post_init__(self) -> None:
+        if self.diameter_initial is None:
+            self.diameter_initial = self.diameter
+        if self.depth is None or self.rim_height is None:
+            # from the degraded profile of the crater
+            h = self.profile(np.linspace(0.0, 2.5, 501))
+            if self.depth is None:
+                self.depth = float(h.max() - h.min())
+            if self.rim_height is None:
+                self.rim_height = float(h.max())
 
     def to_dict(self):
         return asdict(self)
@@ -757,47 +835,62 @@ class Crater:
     def to_json(self):
         return json.dumps(asdict(self))
 
-    @classmethod
-    def crater_depth(cls, r: float) -> float:
-        # normal crater as in https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2021GL095537
-        D = r / 2.0
-        hr = 0.02513 * D ** (-0.0757)
-        if r < 1.0:
-            a = -2.85
-            b = 5.8270
-            d0 = 0.114 * D ** (-0.002)
-            C = d0 * (np.exp(a) + 1) / (np.exp(b) - 1)
-            h = C * (np.exp(b * r) - np.exp(b)) / (1 + np.exp(a + b * r)) + hr
-        else:
-            alpha = -3.1906
-            h = hr * r**alpha
-        return h
+    def crater_depth(self, r: float) -> float:
+        """Elevation / fresh diameter of the fresh crater at ``r`` crater radii from the center."""
+        return float(craters.fresh_profile(r, self.diameter_initial, self.morphology_initial)[0])
 
-    def compute_elevation_patch(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        x = np.linspace(-2.5, 2.5, 100)
-        y = np.linspace(-2.5, 2.5, 100)
+    def profile(self, r: np.ndarray) -> np.ndarray:
+        """Elevation in meters of the degraded crater at ``r`` fresh radii from the center."""
+        table = craters.profile_table()
+        h = craters.crater_profiles(
+            table,
+            np.array([craters.MORPHOLOGIES.index(self.morphology_initial)]),
+            np.array([self.diameter_initial]),
+            np.array([self.degradation_state]),
+        )[0]
+        return np.interp(np.asarray(r, dtype=float), table.radii, h, right=0.0) * self.diameter_initial
+
+    def compute_elevation_patch(self, n: int = 100) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Elevation in meters of the crater on a grid of ``n`` x ``n`` points spanning 2.5 fresh radii."""
+        x = np.linspace(-2.5, 2.5, n)
+        y = np.linspace(-2.5, 2.5, n)
         X, Y = np.meshgrid(x, y)
-
-        self.elevation_patch = np.zeros_like(X)
-        for i, xi in enumerate(x):
-            for j, yj in enumerate(y):
-                rij = np.sqrt(xi**2 + yj**2)
-                self.elevation_patch[i, j] = self.crater_depth(rij)
+        self.elevation_patch = self.profile(np.hypot(X, Y))
         return self.elevation_patch, x, y
 
-    def add_crater_mesh(self, verts: list) -> list:
-        for vert in verts:
-            d = np.sqrt((vert[0] - self.x) ** 2 + (vert[1] - self.y) ** 2)
-            crater_effect_multiplier = 3.5
-            if d < self.diameter * crater_effect_multiplier:
-                vert[2] += self.crater_depth(d / self.diameter) * self.diameter
-                # print(f"Crater depth: {self.crater_depth(d / self.diameter) * self.diameter * 10.0}")
+    def add_crater_mesh(self, verts: np.ndarray) -> np.ndarray:
+        """Add the crater to mesh vertex coordinates (N x 3, meters) in place."""
+        radius = self.diameter_initial / 2.0
+        d = np.hypot(verts[:, 0] - self.x, verts[:, 1] - self.y) / radius
+        near = d < craters.COMMON.ejecta_extent * 2.0
+        verts[near, 2] += self.profile(d[near])
         return verts
 
 
+CRATER_CSV_COLUMNS = (
+    "x",
+    "y",
+    "diameter",
+    "diameter_initial",
+    "morphology_initial",
+    "morphology",
+    "age_myr",
+    "degradation_state",
+    "depth",
+    "rim_height",
+)
+
+
 class CraterField:
+    """A set of craters added to a terrain.
+
+    Craters are generated with :func:`lunasynth.craters.generate_population`: sizes and ages follow the lunar
+    production and chronology functions, each crater is degraded by topographic diffusion for its age, and only
+    craters still visible are kept. See ``docs/craters.md`` for the model and references.
+    """
+
     def __init__(self) -> None:
-        pass
+        self.craters: list[Crater] = []
 
     @property
     def xv(self) -> list[float]:
@@ -816,63 +909,102 @@ class CraterField:
 
     def generate(
         self,
-        k: float,
         size_x: float,
         size_y: float,
-        h_min: float,
-        h_max: float = 10.0,
+        surface_age_ga: float,
+        terrain: str = "highland",
+        d_min: float = 2.0,
+        d_max: float = 50.0,
+        morphology: str = "auto",
+        regolith_thickness: float | None = None,
+        visibility_depth_ratio: float = craters.DEFAULT_VISIBILITY_DEPTH_RATIO,
+        chronology: str = "neukum2001",
+        kappa_800: float | None = None,
+        phi: float | None = None,
         seed: int | None = None,
-        x_init: float = 0,
-        y_init: float = 0,
+        x_init: float = 0.0,
+        y_init: float = 0.0,
     ) -> None:
-        """Generates a rock field with rocks of random size, height, and position.
-        The rocks are placed randomly within the specified size of the rock field.
-        The height of the rocks is randomly generated between h_min and h_max.
+        """Generate the visible craters of a surface.
 
-        Parameters
-        ----------
-        CFA (float): CFA value as a decimal (e.g. CFA5% would have an input of CFA=0.05)
-        size_x (float): The size of the rock field in the x direction.
-        size_y (float): The size of the rock field in the y direction.
-        h_min (float): The minimum height of the rocks.
+        Args:
+            size_x: Size of the area in the x direction, m.
+            size_y: Size of the area in the y direction, m.
+            surface_age_ga: Age of the surface in Gyr. Polar highlands are about 3.5-3.9 Gyr old.
+            terrain: "highland" or "mare". Selects the degradation rate and the regolith thickness.
+            d_min: Smallest fresh crater diameter, m.
+            d_max: Largest fresh crater diameter, m. Craters larger than what the base DEM resolves are already in it.
+            morphology: "auto" to select it from the regolith thickness, or one of
+                :data:`lunasynth.craters.MORPHOLOGIES`.
+            regolith_thickness: Median regolith thickness, m. Defaults to the typical value of the terrain.
+            visibility_depth_ratio: Craters with a smaller depth / diameter are not generated.
+            chronology: "neukum2001" or "yue2022".
+            kappa_800: Diffusivity at 800 m in m^2/Myr, overrides the terrain value (needs ``phi``).
+            phi: Exponent of the size dependence of the diffusivity.
+            seed: Seed of the random number generator.
+            x_init: Smallest x coordinate of the area, m.
+            y_init: Smallest y coordinate of the area, m.
 
         """
+        diffusivity = None
+        if kappa_800 is not None or phi is not None:
+            if kappa_800 is None or phi is None:
+                msg = "kappa_800 and phi must be given together"
+                raise ValueError(msg)
+            diffusivity = craters.Diffusivity(kappa_800, phi)
         self.size_x = size_x
         self.size_y = size_y
-        self.k = k
-        self.h_min = h_min
-        self.h_max = h_max
-
-        self.cfa_model = CfaModel(h_min, h_max, k)
-        crater_diameters, computed_CFA = self.cfa_model.compute_values(size_x * size_y, seed=seed)
-        n_craters = len(crater_diameters)
-
-        self.computed_CFA = computed_CFA
-
-        xv = np.random.rand(n_craters) * size_x + x_init
-        yv = np.random.rand(n_craters) * size_y + y_init
-
+        population = craters.generate_population(
+            size_x,
+            size_y,
+            surface_age_ga,
+            terrain=terrain,
+            d_min=d_min,
+            d_max=d_max,
+            morphology=morphology,
+            regolith_thickness=regolith_thickness,
+            visibility_depth_ratio=visibility_depth_ratio,
+            chronology=chronology,
+            diffusivity=diffusivity,
+            x_init=x_init,
+            y_init=y_init,
+            rng=np.random.default_rng(seed),
+        )
         self.craters = [
             Crater(
-                xv[i],
-                yv[i],
-                crater_diameters[i],
+                x=float(population.x[i]),
+                y=float(population.y[i]),
+                diameter=float(population.diameter[i]),
+                diameter_initial=float(population.diameter_initial[i]),
+                morphology_initial=craters.MORPHOLOGIES[population.morphology_initial[i]],
+                morphology=craters.MORPHOLOGIES[population.morphology[i]],
+                age_myr=float(population.age_myr[i]),
+                degradation_state=float(population.degradation_state[i]),
+                depth=float(population.depth[i]),
+                rim_height=float(population.rim_height[i]),
             )
-            for i in range(n_craters)
+            for i in range(len(population))
         ]
+        print(
+            f"Generated {len(self.craters)} visible craters of {d_min:g}-{d_max:g} m on a {surface_age_ga:g} Gyr "
+            f"{terrain} surface"
+        )
 
     def from_csv(self, filename: str) -> None:
+        """Load craters from a CSV file. Files with only x, y and diameter load as fresh normal craters."""
         import csv
 
-        craters = []
+        craters_list = []
         with open(filename, newline="") as csvfile:
-            reader = csv.reader(csvfile)
-            for i, row in enumerate(reader):
-                if i == 0:
-                    continue
-                x, y, diameter = map(float, row)
-                craters.append(Crater(x, y, diameter))
-        self.craters = craters
+            for row in csv.DictReader(csvfile):
+                values = {}
+                for key, value in row.items():
+                    if key in ("morphology_initial", "morphology"):
+                        values[key] = value
+                    elif key in CRATER_CSV_COLUMNS:
+                        values[key] = float(value)
+                craters_list.append(Crater(**values))
+        self.craters = craters_list
 
     def save(self, filename: str) -> None:
         import csv
@@ -880,38 +1012,19 @@ class CraterField:
         # create parent directory if it does not exist
         Path(filename).parent.mkdir(parents=True, exist_ok=True)
 
-        with open(filename, mode="w") as file:
+        with open(filename, mode="w", newline="") as file:
             writer = csv.writer(file)
-            writer.writerow(
-                [
-                    "x",
-                    "y",
-                    "diameter",
-                ]
-            )
-            rows = [
-                [
-                    crater.x,
-                    crater.y,
-                    crater.diameter,
-                ]
-                for crater in self.craters
-            ]
-            writer.writerows(rows)
+            writer.writerow(CRATER_CSV_COLUMNS)
+            writer.writerows([[getattr(crater, column) for column in CRATER_CSV_COLUMNS] for crater in self.craters])
 
-    def place_craters_mesh(self, craters, mesh) -> None:
-        # Get a list of all vertex coordinates
+    def place_craters_mesh(self, craters_list: list[Crater], mesh) -> None:
+        """Add craters to a Blender mesh. Vertex coordinates are in the same frame as the craters."""
         verts = np.array([vert.co for vert in mesh.vertices])
 
-        time_per_crater = []
-        for crater in tqdm.tqdm(craters, desc="Adding craters"):
-            start = time.time()
+        start = time.time()
+        for crater in tqdm.tqdm(craters_list, desc="Adding craters"):
             verts = crater.add_crater_mesh(verts)
-            time_per_crater.append(time.time() - start)
-        print(
-            f"Time to add craters {dth(np.sum(time_per_crater))},  "
-            f"Average time per crater: {dth(float(np.mean(time_per_crater)))}"
-        )
+        print(f"Time to add craters {dth(time.time() - start)}")
 
         start = time.time()
         for i, vert in enumerate(mesh.vertices):
@@ -919,13 +1032,44 @@ class CraterField:
         mesh.update()
         print(f"Time to update mesh {dth(time.time() - start)}")
 
-    def place_craters_dem(self, craters: list[Crater], dem: np.ndarray, pixel_size: float = 1.0) -> np.ndarray:
-        # crater x, y and diameter are in meters; convert to DEM pixels (rows follow y, columns follow x)
-        row_coords = np.array([crater.y for crater in craters]) / pixel_size
-        col_coords = np.array([crater.x for crater in craters]) / pixel_size
-        diameters = np.array([crater.diameter for crater in craters]) / pixel_size
+    def place_craters_dem(
+        self,
+        craters_list: list[Crater],
+        dem: np.ndarray,
+        pixel_size: float = 1.0,
+        x_min: float = 0.0,
+        y_max: float | None = None,
+    ) -> np.ndarray:
+        """Add craters to a DEM array in place.
+
+        Crater coordinates are in meters. Column 0 of the DEM is at ``x = x_min``. If ``y_max`` is given, row 0 is
+        at ``y = y_max`` and rows go towards -y (north up, as in GeoTIFFs and in
+        :func:`blender_helper.load_mesh_from_array`). Otherwise row 0 is at ``y = 0`` and rows go towards +y.
+
+        Args:
+            craters_list: Craters to add.
+            dem: Elevation array, modified in place.
+            pixel_size: DEM pixel size, m.
+            x_min: x coordinate of column 0, m.
+            y_max: y coordinate of row 0, m.
+
+        """
+        if len(craters_list) == 0:
+            return dem
+        x = np.array([crater.x for crater in craters_list])
+        y = np.array([crater.y for crater in craters_list])
+        cols = (x - x_min) / pixel_size
+        rows = y / pixel_size if y_max is None else (y_max - y) / pixel_size
         start = time.time()
-        dem = place_crater_dems_numba(row_coords, col_coords, diameters, dem, pixel_size)
+        craters.add_craters_to_dem(
+            dem,
+            rows,
+            cols,
+            diameters=np.array([crater.diameter_initial for crater in craters_list]),
+            morphology=np.array([craters.MORPHOLOGIES.index(crater.morphology_initial) for crater in craters_list]),
+            degradation_states=np.array([crater.degradation_state for crater in craters_list]),
+            pixel_size=pixel_size,
+        )
         print(f"Time to add craters {dth(time.time() - start)}")
         return dem
 
@@ -960,54 +1104,6 @@ class CraterField:
         self.place_craters_mesh(crater_field.craters, mesh)
 
 
-@njit(parallel=True)
-def place_crater_dems_numba(
-    row_coords: np.ndarray, col_coords: np.ndarray, diameters: np.ndarray, dem: np.ndarray, pixel_size: float = 1.0
-) -> np.ndarray:
-    def crater_depth_numba(
-        r: float,
-        c1: float = 0.02513,
-        c2: float = -0.0757,
-        a: float = -2.85,
-        b: float = 5.8270,
-        c4: float = 0.114,
-        c5: float = -0.002,
-        alpha: float = -3.1906,
-    ) -> float:
-        # normal crater as in https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2021GL095537
-        D = r / 2.0
-
-        hr = c1 * D ** (c2)
-        if r < 1.0:
-            d0 = c4 * D ** (c5)
-            C = d0 * (np.exp(a) + 1) / (np.exp(b) - 1)
-            h = C * (np.exp(b * r) - np.exp(b)) / (1 + np.exp(a + b * r)) + hr
-        else:
-            h = hr * r**alpha
-        return h
-
-    crater_effect_multiplier = 3.5  # how many radius away to affect
-    for idx in prange(len(row_coords)):
-        x = row_coords[idx]
-        y = col_coords[idx]
-        diameter = diameters[idx]
-
-        x_min = max(int(x - diameter * crater_effect_multiplier), 0)
-        x_max = min(int(x + diameter * crater_effect_multiplier), dem.shape[0])
-        y_min = max(int(y - diameter * crater_effect_multiplier), 0)
-        y_max = min(int(y + diameter * crater_effect_multiplier), dem.shape[1])
-
-        crater_patch = np.zeros((x_max - x_min, y_max - y_min))
-        for i in range(x_min, x_max):
-            for j in range(y_min, y_max):
-                d = np.sqrt((i - x) ** 2 + (j - y) ** 2)
-                if d < diameter * crater_effect_multiplier:
-                    # depth profile scales with diameter in meters
-                    crater_patch[i - x_min, j - y_min] = crater_depth_numba(d / diameter) * diameter * pixel_size
-        dem[x_min:x_max, y_min:y_max] += crater_patch
-    return dem
-
-
 @dataclass
 class Terrain:
     base_mesh: str
@@ -1021,12 +1117,12 @@ class Terrain:
 
     def generate(self, mesh_file: str, terrain_dict: dict, render_config: dict, output_case_dir: str) -> None:
         print(f"Loading mesh {mesh_file}")
-        # compute zoom factor to achieve desired spatial resolution
-        mesh_spatial_resolution = 5.0  # TODO: get from GeoTIFF
         desired_spatial_resolution = terrain_dict["desired_spatial_resolution"]
-        zoom_factor = mesh_spatial_resolution / desired_spatial_resolution
 
         with dem_tools.DEM(mesh_file) as dem:
+            base_pixel_size = dem.res[0]
+            # zoom to achieve the desired spatial resolution
+            zoom_factor = base_pixel_size / desired_spatial_resolution
             if zoom_factor != 1.0:
                 dem.zoom(zoom_factor)
             elevation_data = dem.band1
@@ -1035,7 +1131,6 @@ class Terrain:
             ymax = dem.bounds[3]
             xmin = dem.bounds[0]
             xmax = dem.bounds[2]
-            pixel_size = dem.res[0]
 
         dem_center_x = (xmin + xmax) / 2
         dem_center_y = (ymin + ymax) / 2
@@ -1054,18 +1149,24 @@ class Terrain:
 
         if terrain_dict.get("add_craters", True):
             crater_field = CraterField()
-            crater_density = sample(terrain_dict["crater_field"]["density"])
             crater_field.generate(
-                k=crater_density,
-                size_y=ymax - ymin,
                 size_x=xmax - xmin,
-                h_min=terrain_dict["crater_field"]["h_min"],
-                h_max=terrain_dict["crater_field"]["h_max"],
-                x_init=0,
-                y_init=0,
+                size_y=ymax - ymin,
+                x_init=dem_xmin_center,
+                y_init=dem_ymin_center,
+                **crater_field_arguments(terrain_dict["crater_field"], base_pixel_size),
             )
             crater_field.save(str(Path(output_case_dir) / Path("crater_field.csv")))
-            elevation_data = crater_field.place_craters_dem(crater_field.craters, elevation_data, pixel_size)
+            # load_mesh_from_array spans the mesh size with one vertex per DEM sample, from -x to +x along columns
+            # and from +y to -y along rows
+            vertex_spacing = mesh_size / (elevation_data.shape[1] - 1)
+            elevation_data = crater_field.place_craters_dem(
+                crater_field.craters,
+                elevation_data,
+                vertex_spacing,
+                x_min=-mesh_size / 2,
+                y_max=mesh_size / 2,
+            )
 
         mesh_material = terrain_dict.get("mesh_material", "Regolith7_MAT")
         start_time = time.time()
