@@ -11,13 +11,15 @@ fi
 # Directory where all the outputs are written
 OUTPUT_DIR="${OUTPUT_DIR:-tmp/pipelines}"
 
-# Generate crater field
+# Generate the craters of a 3.9 Gyr mare surface, centered at the origin
 python src/lunasynth/cli/create_crater_field.py \
-    --CFA 0.6 \
     --size_x 40 \
     --size_y 40 \
-    --h_min 2.0 \
-    --h_max 20.0 \
+    --age 3.9 \
+    --terrain mare \
+    --d_min 1.0 \
+    --d_max 20.0 \
+    --seed 0 \
     --output "$OUTPUT_DIR/moon_crater_field.csv"
 
 # Load crater field into blender using a blend file

@@ -28,13 +28,12 @@ terrain:
       min: 0.01
       max: 0.02
   crater_field:
-    crater_type: "normal"
-    h_min: 1.0
-    h_max: 20.0
-    density:
-      type: "uniform"
-      min: 0.1
-      max: 0.2
+    terrain: "highland"  # polar highlands; "mare" degrades craters more slowly
+    surface_age_ga: 3.9  # Gyr
+    morphology: "auto"  # from the regolith thickness, or normal, central_mound, flat_bottomed, concentric
+    d_min: 1  # m, smallest fresh crater
+    # craters larger than resolvable_pixels pixels of the base DEM are already in it
+    resolvable_pixels: 10
 rendering_cases:
   cases: 2
   distributions:

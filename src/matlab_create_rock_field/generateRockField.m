@@ -56,7 +56,7 @@ function rockField = generateRockField(k, size_x, size_y,Dmin)
 
     end
 
-    q =  0.5648 + 0.01285/k; % Experimental values Moon
+    q =  0.5648 + 0.01285/k; % Moon values, Li & Wu 2018, https://doi.org/10.1029/2017JE005496, Eq. 6
     
     F = griddedInterpolant(NumCDF,D(1:end-1));
     NumRandNums = 6000*size_x*size_y/1000;
@@ -102,7 +102,7 @@ function P=AreaPDF(D, k)
     % k = cumulative fraction covered by rocks of all sizes
     % Source = http://onlinelibrary.wiley.com/doi/10.1029/96JE03319/pdf
     % Derived from Golombek 1997
-    q =  0.5648 + 0.01285/k;    % Moon Values - Experimental
+    q =  0.5648 + 0.01285/k;    % Moon values, Li & Wu 2018, https://doi.org/10.1029/2017JE005496, Eq. 6
     P = k*q*exp(-q.*D);
 end
 

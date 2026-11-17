@@ -17,7 +17,7 @@ import os
 import sys
 
 import bpy
-from bpy.props import FloatProperty, PointerProperty
+from bpy.props import EnumProperty, FloatProperty, PointerProperty
 
 # activate virtual environment or define VIRTUAL_ENV environment variable
 # cd to lunasynth root directory
@@ -83,7 +83,6 @@ class AddCratersOperator(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        h_max = 20.0
         add_craters_item = context.scene.add_craters_item
         # get xinit, yinit, xend, yend from target mesh
         if add_craters_item.target_mesh is None:
@@ -95,11 +94,12 @@ class AddCratersOperator(bpy.types.Operator):
         size_y = ymax - ymin
         print(f"Mesh bounds: {xmin}, {ymin}, {zmin}, {xmax}, {ymax}, {zmax}")
         crater_field.generate(
-            add_craters_item.crater_density,
-            size_x,
-            size_y,
-            add_craters_item.h_min,
-            h_max,
+            size_x=size_x,
+            size_y=size_y,
+            surface_age_ga=add_craters_item.surface_age,
+            terrain=add_craters_item.terrain,
+            d_min=add_craters_item.d_min,
+            d_max=add_craters_item.d_max,
             x_init=xmin,
             y_init=ymin,
         )
@@ -137,17 +137,22 @@ class AddCratersPanel(bpy.types.Panel):
         layout = self.layout
         item_list = context.scene.add_craters_item
 
-        layout.prop(item_list, "crater_density")
-        layout.prop(item_list, "h_min")
+        layout.prop(item_list, "surface_age")
+        layout.prop(item_list, "terrain")
+        layout.prop(item_list, "d_min")
+        layout.prop(item_list, "d_max")
         layout.prop(item_list, "target_mesh")
         layout.operator("object.add_craters_operator")
         layout.operator("object.delete_craters_operator")
 
 
 class AddCratersItem(bpy.types.PropertyGroup):
-    crater_density: FloatProperty(name="Crater Density", default=1.00, min=0.1, max=2)  # type: ignore[valid-type]
-    crater_field_extension: FloatProperty(name="Crater Field Exentsion", default=1.0, min=0, max=1)  # type: ignore[valid-type]
-    h_min: FloatProperty(name="H Min", default=1.0, min=0.1)  # type: ignore[valid-type]
+    surface_age: FloatProperty(name="Surface Age (Gyr)", default=3.9, min=0.01, max=4.5)  # type: ignore[valid-type]
+    terrain: EnumProperty(  # type: ignore[valid-type]
+        name="Terrain", items=[("highland", "Highland", ""), ("mare", "Mare", "")], default="highland"
+    )
+    d_min: FloatProperty(name="Min Diameter (m)", default=2.0, min=0.1)  # type: ignore[valid-type]
+    d_max: FloatProperty(name="Max Diameter (m)", default=50.0, min=0.2)  # type: ignore[valid-type]
     target_mesh: PointerProperty(name="Target Mesh", type=bpy.types.Object)  # type: ignore[valid-type]
 
 
