@@ -115,9 +115,16 @@ uv run python src/data_tools/estimate_dem_craters.py assets/base_meshes/NPC_fina
 It also prints the diffusivity `kappa_800` for which the model has as many craters as detected, which can be set in
 the dataset configuration so the added craters continue the distribution of the base DEM. Detections are a lower
 bound: the detector finds about half of the craters in synthetic tests, and most pixels of the LOLA polar DEMs
-(PGDA product 78) are interpolated between altimetry tracks. On the two tiles in `assets/base_meshes` it finds 2 and
-8 craters ≥ 50 m per km², more than the highland model (1 per km²), which suggests slower degradation in these
+(PGDA product 78) are interpolated between altimetry tracks. On the two LOLA tiles in `assets/base_meshes` it finds 2
+and 6 craters ≥ 50 m per km², more than the highland model (1 per km²), which suggests slower degradation in these
 polar regions than at the equatorial highland sites of Zhang et al. (2026).
+
+`src/data_tools/detector_report.py` writes a self-contained HTML report of the detector: usage, method, the
+detections on each base DEM with a close-up of every crater, validation on synthetic craters, and references:
+
+```bash
+uv run python src/data_tools/detector_report.py --output tmp/detector_report.html
+```
 
 ## Comparison with the previous model
 

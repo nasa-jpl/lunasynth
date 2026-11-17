@@ -16,11 +16,12 @@
 LuNaSynth only adds craters smaller than what the base DEM resolves (``crater_field.resolvable_pixels``). This script
 checks that the craters the base DEM does contain are consistent with the model used for the smaller ones.
 
-Craters are detected as bowl-shaped depressions: scale-space maxima of the scale-normalized Laplacian of Gaussian of
-the topography. After removing the regional slope, a candidate is kept if its depth / diameter is above a threshold
-and its topography is close to axisymmetric (the radial profile explains most of its variance), which rejects most
-depressions of rough terrain without craters. The script writes a CSV of the detections and a figure with the
-cumulative size-frequency distribution of the detected craters, the model's visible craters for the same surface age
+Craters are detected as bowl-shaped depressions: scale-space maxima of the scale-normalized Laplacian of Gaussian of the
+topography. After removing the regional slope, a candidate is kept if its depth / diameter is above a threshold, its
+topography is close to axisymmetric (the radial profile explains most of its variance), which rejects most depressions
+of rough terrain without craters, and its surroundings are not much more curved than its own depth, which rejects the
+walls and floors of craters larger than the searched range. The script writes a CSV of the detections and a figure with
+the cumulative size-frequency distribution of the detected craters, the model's visible craters for the same surface age
 and terrain, the production function, and the geometric saturation.
 
 On synthetic tests (fresh and degraded craters of 10-40 pixels on fractal terrain), the detector finds about half of
@@ -121,8 +122,16 @@ def detect_craters(
         bins = np.minimum((distance[inside] / 0.1).astype(int), 14)
         radial_profile = np.bincount(bins, z[inside]) / np.maximum(np.bincount(bins), 1)
         axisymmetry = 1 - np.var(z[inside] - radial_profile[bins]) / max(np.var(z[inside]), 1e-12)
-        if axisymmetry >= min_axisymmetry:
-            detections.append((j, i, diameter, depth, stack[k, i, j]))
+        if axisymmetry < min_axisymmetry:
+            continue
+        # the walls of a crater larger than the searched range curve the surroundings (a parabola instead of a
+        # plane); a crater's own depth is much larger than that curvature across it
+        quadratic = np.column_stack([rr[outside] ** 2, cc[outside] ** 2, rr[outside] * cc[outside], design])
+        coefficients, *_ = np.linalg.lstsq(quadratic, z[outside], rcond=None)
+        bowl = (coefficients[0] * rr**2 + coefficients[1] * cc**2 + coefficients[2] * rr * cc)[distance <= 1.0]
+        if np.ptp(bowl) > 0.5 * depth:
+            continue
+        detections.append((j, i, diameter, depth, stack[k, i, j]))
     return _suppress_overlaps(np.array(detections, dtype=float).reshape(-1, 5), pixel_size)[:, :4]
 
 
@@ -152,7 +161,8 @@ def model_visible_craters(
     # degradation state at which normal craters become invisible
     normal = table.depth_ratio[craters.NORMAL].mean(axis=0)
     state_invisible = np.interp(-visibility_depth_ratio, -normal, table.degradation_states)
-    grid = np.geomspace(diameters.min() / 2, diameters.max() * 4, 2000)
+    # integrate to 10 km so the cumulative count includes all larger craters, whatever diameters are asked
+    grid = np.geomspace(min(diameters.min(), 1.0) / 2, 10_000.0, 4000)
     lifetime_ga = state_invisible * grid**2 / diffusivity(grid) / 1000.0
     differential = -np.gradient(production.cumulative_shape(grid), grid)
     visible = differential * production.n1(np.minimum(lifetime_ga, surface_age_ga))
