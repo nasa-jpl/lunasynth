@@ -109,9 +109,10 @@ def detect_craters(
         crest = 0.05 * (np.argmax(mean_profile[10:30]) + 10.5)  # between 0.5 and 1.5 radii
         radius *= crest
         distance /= crest
-        # rim height as in Zhang et al. (2026): mean elevation of a thin ring at the rim
-        rim = z[(distance >= 0.9) & (distance <= 1.1)].mean()
-        floor = z[distance <= 0.3].min()
+        # rim height as in Zhang et al. (2026): mean elevation of a thin ring at the rim, at least a pixel wide
+        half_width = max(0.1, 0.5 / radius)
+        rim = z[np.abs(distance - 1.0) <= half_width].mean()
+        floor = z[distance <= max(0.3, 0.5 / radius)].min()
         depth = rim - floor
         diameter = 2 * radius * pixel_size
         if depth / diameter < min_depth_ratio:

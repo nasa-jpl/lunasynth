@@ -22,8 +22,15 @@ crater settings of its own ``ortho_nominal`` configuration. The script writes fo
 - ``compare_gallery.png``: the four morphologies of the current model, fresh and degrading.
 - ``compare_stats.png``: size-frequency distributions, morphologies and depth / diameter against age.
 
-Example (compare with the revision before the crater model of ``lunasynth.craters``):
+With ``--compare-dem``, it instead adds craters of the current model to two base DEMs (for example a LOLA tile and a
+higher-quality Shape-from-Shading tile) and writes ``compare_dem.png``.
+
+Examples:
+    # compare with the revision before the crater model of lunasynth.craters
     uv run python src/data_tools/compare_crater_models.py --previous b917e01 --output-dir docs/images/craters
+    # the current model on a LOLA and a Shape-from-Shading base DEM
+    uv run python src/data_tools/compare_crater_models.py --compare-dem \
+        assets/base_meshes/A310_SfS_5mpp_Leibnitz_Beta_piece_1km_r1600_c1200.tif --output-dir docs/images/craters
 """
 
 import argparse
@@ -343,9 +350,84 @@ def plot(output_dir: str, title: str) -> None:
         print(f"{version}: {summary['n']} craters, repeated stamping differs by {difference:.3g} m")
 
 
+def compare_dems(base_dems: list[str], output_dir: str, seed: int) -> None:
+    """Add craters of the current model to each base DEM and plot them side by side."""
+    import matplotlib as mpl
+
+    mpl.use("Agg")
+    import matplotlib.pyplot as plt
+    import rasterio
+    from lunasynth.terrain_enhancement import CraterField, crater_field_arguments
+    from matplotlib.colors import LightSource
+    from scipy.ndimage import zoom
+
+    ink, ink_secondary, surface, highlight = "#0b0b0b", "#52514e", "#fcfcfb", "#eb6834"
+    plt.rcParams.update(
+        {
+            "font.size": 9,
+            "axes.titlesize": 9.5,
+            "axes.titleweight": "bold",
+            "axes.titlecolor": ink,
+            "figure.facecolor": surface,
+            "axes.facecolor": surface,
+            "xtick.color": ink_secondary,
+            "ytick.color": ink_secondary,
+            "axes.labelcolor": ink_secondary,
+        }
+    )
+    light = LightSource(azdeg=270, altdeg=12)
+    fig, axes = plt.subplots(len(base_dems), 3, figsize=(15, 5.1 * len(base_dems)), squeeze=False)
+    for row, path in enumerate(base_dems):
+        with rasterio.open(path) as src:
+            base = src.read(1).astype(float)
+            base_pixel_size = src.res[0]
+        dem0 = zoom(base, base_pixel_size / PIXEL_SIZE, order=3)
+        size = dem0.shape[0] * PIXEL_SIZE
+        crater_field = CraterField()
+        arguments = crater_field_arguments(
+            {"terrain": "highland", "surface_age_ga": 3.9, "d_min": 2.0}, base_pixel_size
+        )
+        crater_field.generate(size_x=size, size_y=size, x_init=-size / 2, y_init=-size / 2, seed=seed, **arguments)
+        dem = crater_field.place_craters_dem(
+            crater_field.craters, dem0.copy(), PIXEL_SIZE, x_min=-size / 2, y_max=size / 2
+        )
+        full = (-size / 2, size / 2, -size / 2, size / 2)
+        zoom_pixels = int(250 / PIXEL_SIZE)  # 250 x 250 m in the top-left corner
+        zoomed = (-size / 2, -size / 2 + 250, size / 2 - 250, size / 2)
+        panels = (
+            (dem0, f"{Path(path).stem}\nbase DEM, {size / 1000:g} x {size / 1000:g} km", full),
+            (dem, f"+ {len(crater_field.craters)} craters (3.9 Gyr highland, 2-{arguments['d_max']:.0f} m)", full),
+            (dem[: zoom_pixels + 1, : zoom_pixels + 1], "zoom 250 x 250 m, with craters", zoomed),
+        )
+        for col, (elevation, title, extent) in enumerate(panels):
+            ax = axes[row, col]
+            ax.imshow(
+                light.hillshade(elevation, dx=PIXEL_SIZE, dy=PIXEL_SIZE), cmap="gray", extent=extent, vmin=0, vmax=1
+            )
+            ax.set_title(title, loc="left")
+            ax.set_xlabel("x (m)")
+            for spine in ax.spines.values():
+                spine.set_visible(False)
+        width = zoomed[1] - zoomed[0]
+        axes[row, 1].add_patch(plt.Rectangle((zoomed[0], zoomed[2]), width, width, fill=False, color=highlight, lw=1.2))
+        axes[row, 0].set_ylabel("y (m)")
+        print(f"{path}: {len(crater_field.craters)} craters of 2-{arguments['d_max']:.0f} m")
+    fig.suptitle(
+        f"Current crater model on each base DEM, upsampled to {PIXEL_SIZE:g} m/px (same seed: identical added craters)",
+        x=0.01,
+        ha="left",
+        fontsize=11,
+    )
+    fig.tight_layout(rect=(0, 0, 1, 0.97))
+    fig.savefig(Path(output_dir) / "compare_dem.png", dpi=72)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Compare crater generation with a previous git revision.")
-    parser.add_argument("--previous", required=True, help="Git revision of the previous crater code.")
+    parser.add_argument("--previous", help="Git revision of the previous crater code.")
+    parser.add_argument(
+        "--compare-dem", nargs="+", help="Base DEMs to compare with --base-dem using the current crater model."
+    )
     parser.add_argument("--base-dem", default=str(DEFAULT_BASE_DEM), help="Base DEM GeoTIFF.")
     parser.add_argument("--output-dir", default="tmp/crater_comparison", help="Folder for the figures.")
     parser.add_argument("--seed", type=int, default=7, help="Seed of the crater fields.")
@@ -359,6 +441,12 @@ def main():
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    if args.compare_dem:
+        compare_dems([args.base_dem, *args.compare_dem], str(output_dir), args.seed)
+        print(f"Saved {output_dir / 'compare_dem.png'}")
+        return
+    if args.previous is None:
+        parser.error("--previous or --compare-dem is required")
     with tempfile.TemporaryDirectory() as work:
         work = Path(work)
         previous_src = work / "previous"

@@ -139,10 +139,34 @@ uv run python src/data_tools/compare_crater_models.py --previous b917e01 --outpu
 
 ![Size-frequency distributions, morphologies and degradation](images/craters/compare_stats.png)
 
+### Base DEM quality
+
+On the LOLA tiles of PGDA product 78, most pixels are interpolated between altimetry tracks, which leaves
+interpolation artifacts (triangular facets and spurious pits) that are as visible as the added craters. The
+Shape-from-Shading DEMs of [PGDA product 104](https://pgda.gsfc.nasa.gov/products/104) (Bertone et al., 2026), built
+from LROC NAC images, have the same 5 m pixels but resolve real craters down to about 15-20 m.
+`assets/base_meshes/A310_SfS_5mpp_Leibnitz_Beta_piece_1km_r1600_c1200.tif` is a 1 km piece of the Leibnitz Beta
+Plateau region. With the same seed, the same craters are added to both tiles:
+
+```bash
+uv run python src/data_tools/compare_crater_models.py \
+    --compare-dem assets/base_meshes/A310_SfS_5mpp_Leibnitz_Beta_piece_1km_r1600_c1200.tif --output-dir docs/images/craters
+```
+
+![The current crater model on a LOLA tile and a Shape-from-Shading tile](images/craters/compare_dem.png)
+
+`estimate_dem_craters.py` finds 6 craters of 20 m or more (depth / diameter > 0.04) on the SfS tile. Injecting known
+craters into the same tile shows the detector finds about 54% of them there, so the tile has about 11 visible craters
+larger than 20 m per km², within a factor of two of the highland model (5.6 per km²). On the SfS tiles,
+`resolvable_pixels: 4` (20 m) avoids adding craters the base DEM already shows.
+
 ## References
 
 - Bart, G. D., Nickerson, R. D., Lawder, M. T., Melosh, H. J. (2011). Global survey of lunar regolith depths from LROC
   images. Icarus 215, 485-490. https://doi.org/10.1016/j.icarus.2011.07.017
+- Bertone, S., McKenna, T. E., Barker, M. K., Mazarico, E., Beyer, R. A., Petro, N. (2026). Enhanced topography
+  models for selected lunar south pole regions with Shape-from-Shading. PSJ 7, 118.
+  https://doi.org/10.3847/PSJ/ae5b70 (data: https://doi.org/10.5281/zenodo.17954508)
 - Fassett, C. I., Crowley, M. C., Leight, C., et al. (2018). Evidence for rapid topographic evolution and crater
   degradation on Mercury from simple crater morphometry. GRL 44, 5326-5335. https://doi.org/10.1002/2017GL073769
 - Golombek, M., Rapp, D. (1997). Size-frequency distributions of rocks on Mars and Earth analog sites. JGR 102,
